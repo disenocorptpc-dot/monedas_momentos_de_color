@@ -1,0 +1,24 @@
+﻿nombre_completo,coordinacion,jefe_directo,titular_mesa_alta,cuota_mes,notas
+Eva (apellido pendiente),Fotografía,,Eva,1,"Confirmar nombre completo y si es titular"
+Rafael López,Fotografía,Jonatan Aguilar,,1,"Único suplente interno posible para comité en esta coordinación"
+Jonatan Aguilar,Fotografía,,Eva,1,"Integrante comité — inhabilitado si es nominado"
+Homero Hernández,Diseño Industrial y 3D,,Homero Hernández,1,"Integrante comité"
+(colaborador 2 DI3D),Diseño Industrial y 3D,Homero Hernández,,1,
+(colaborador 3 DI3D),Diseño Industrial y 3D,Homero Hernández,,1,
+Paola Carmona,Arte y Branding,,Paola Carmona,1,"Ver nota: posible alias Tanya Montserrat Castro Ronquillo"
+(AyB col 2),Arte y Branding,,, ,
+(AyB col 3),Arte y Branding,,, ,
+(AyB col 4),Arte y Branding,,, ,
+(AyB col 5),Arte y Branding,,, ,
+(AyB col 6),Arte y Branding,,, ,
+Cristina Coba,Operaciones,,Cristina Coba,2,"Ver nota: posible alias Angie Sierra Garrido; cuota 2 por ser Operaciones"
+(Ops col 2),Operaciones,,, ,
+(Ops col 3),Operaciones,,, ,
+(Ops col 4),Operaciones,,, ,
+(Ops col 5),Operaciones,,, ,
+(Ops col 6),Operaciones,,, ,
+(Ops col 7),Operaciones,,, ,
+(Ops col 8),Operaciones,,, ,
+(Ops col 9),Operaciones,,, ,
+(Ops col 10),Operaciones,,, ,
+(Ops col 11),Operaciones,,, ,
