@@ -13,15 +13,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className="dark">
-      <body className="min-h-screen bg-[#070A12] text-slate-100 antialiased selection:bg-amber-500 selection:text-slate-950">
+    <html lang="es">
+      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased selection:bg-[#B88F69]/25 selection:text-slate-900">
         <Navbar />
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {children}
         </main>
-        <footer className="border-t border-slate-800/60 py-8 text-center text-xs text-slate-500">
-          <p>© 2026 The Palace Company · Dirección de Diseño y Experiencia</p>
-          <p className="mt-1 text-slate-600">
+        <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-400">
+          <p className="font-medium text-slate-500">© 2026 The Palace Company · Dirección de Diseño y Experiencia</p>
+          <p className="mt-1 text-slate-400">
             Sistema impulsado con Next.js 14, Supabase y Árbitro de Inteligencia Artificial
           </p>
         </footer>

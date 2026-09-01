@@ -4,15 +4,15 @@
 
 @layer base {
   :root {
-    --background: #090D16;
-    --foreground: #F8FAFC;
+    --background: #F8FAFC;
+    --foreground: #0F172A;
   }
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
   min-height: 100vh;
 }
 
@@ -22,25 +22,49 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #F1F5F9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #CBD5E1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94A3B8;
 }
 
-/* Glassmorphism utility */
+/* Panel institucional — tarjeta contenedora principal */
+.panel-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+}
+
+/* Tarjeta de contenido secundaria */
+.content-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.content-card:hover {
+  box-shadow: 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+}
+
+/* Retro-compatibilidad de nombres anteriores (mismo tratamiento claro) */
 .glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
 }
 
 .glass-card {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.glass-card:hover {
+  box-shadow: 0 4px 10px -2px rgba(15, 23, 42, 0.06);
 }

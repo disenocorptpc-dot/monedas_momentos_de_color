@@ -26,9 +26,7 @@ import {
   Award,
   CheckCircle2,
   AlertTriangle,
-  ShieldAlert,
   Send,
-  UserCheck,
 } from "lucide-react";
 
 export default function VotacionPage() {
@@ -162,29 +160,29 @@ export default function VotacionPage() {
     <div className="space-y-8 pb-12 max-w-5xl mx-auto">
       {/* Encabezado */}
       <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#2A7D6F]/30 bg-[#2A7D6F]/10 px-3 py-1 text-xs font-semibold text-[#2A7D6F]">
           <Vote className="h-3.5 w-3.5" />
           Mesa Comité · Cámara de Votación Borda (3-2-1)
         </div>
-        <h1 className="font-serif text-2xl font-bold tracking-tight text-white sm:text-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
           Votación del Comité ({CONVOCATORIA_ACTUAL.ciclo})
         </h1>
-        <p className="text-xs text-slate-400 sm:text-sm">
-          Asigna <strong>3 puntos</strong> a tu 1er lugar, <strong>2 puntos</strong> al 2do lugar y <strong>1 punto</strong> al 3er lugar. Cada puntuación debe asignarse a un nominado distinto.
+        <p className="text-xs text-slate-500 sm:text-sm">
+          Asigna <strong className="text-slate-700">3 puntos</strong> a tu 1er lugar, <strong className="text-slate-700">2 puntos</strong> al 2do lugar y <strong className="text-slate-700">1 punto</strong> al 3er lugar. Cada puntuación debe asignarse a un nominado distinto.
         </p>
       </div>
 
       {/* Selector de Votante */}
-      <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
+      <div className="panel-card rounded-xl p-6 border border-slate-200 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-medium text-slate-600 mb-1">
               Seleccionar Integrante del Comité o Comodín Activo:
             </label>
             <select
               value={votanteActualId}
               onChange={(e) => setVotanteActualId(e.target.value)}
-              className="w-full sm:w-80 rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+              className="w-full sm:w-80 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]/20"
             >
               {comite.map((miembro) => {
                 const c = COLABORADORES_INICIALES.find((col) => col.id === miembro.colaborador_id);
@@ -194,7 +192,7 @@ export default function VotacionPage() {
 
                 return (
                   <option key={miembro.id} value={miembro.id} disabled={esInhab}>
-                    {c?.nombre_completo} ({coord?.nombre || "Comodín"}) {esInhab ? "⛔ [Inhabilitado]" : ""}
+                    {c?.nombre_completo} ({coord?.nombre || "Comodín"}) {esInhab ? "[Inhabilitado]" : ""}
                   </option>
                 );
               })}
@@ -202,32 +200,32 @@ export default function VotacionPage() {
           </div>
 
           {/* Resumen de boleta actual */}
-          <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3.5 flex items-center gap-3">
-            <span className="text-xs font-bold text-slate-400">Puntos Asignados:</span>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 flex items-center gap-3">
+            <span className="text-xs font-semibold text-slate-500">Puntos Asignados:</span>
             <div className="flex gap-2">
               <span
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
                   Object.values(puntosAsignados).includes(3)
-                    ? "bg-amber-400 text-slate-950"
-                    : "bg-slate-800 text-slate-500"
+                    ? "bg-[#254D6E] text-white"
+                    : "bg-white text-slate-400 border border-slate-200"
                 }`}
               >
                 3 pts {Object.values(puntosAsignados).includes(3) ? "✓" : "—"}
               </span>
               <span
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
                   Object.values(puntosAsignados).includes(2)
-                    ? "bg-slate-300 text-slate-950"
-                    : "bg-slate-800 text-slate-500"
+                    ? "bg-[#4A8BB5] text-white"
+                    : "bg-white text-slate-400 border border-slate-200"
                 }`}
               >
                 2 pts {Object.values(puntosAsignados).includes(2) ? "✓" : "—"}
               </span>
               <span
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
                   Object.values(puntosAsignados).includes(1)
-                    ? "bg-amber-700 text-white"
-                    : "bg-slate-800 text-slate-500"
+                    ? "bg-[#B88F69] text-white"
+                    : "bg-white text-slate-400 border border-slate-200"
                 }`}
               >
                 1 pt {Object.values(puntosAsignados).includes(1) ? "✓" : "—"}
@@ -239,14 +237,14 @@ export default function VotacionPage() {
 
       {/* Alertas */}
       {errorMsg && (
-        <div className="flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-xs font-semibold text-rose-300">
+        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-4 text-xs font-medium text-rose-700">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           {errorMsg}
         </div>
       )}
 
       {exitoMsg && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-xs font-bold text-emerald-300">
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-700">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           {exitoMsg}
         </div>
@@ -263,14 +261,14 @@ export default function VotacionPage() {
             return (
               <div
                 key={nom.id}
-                className={`glass-card rounded-2xl p-6 border transition-all ${
+                className={`content-card rounded-xl p-6 border transition-all ${
                   puntosVotados === 3
-                    ? "border-amber-400 bg-amber-500/10 shadow-lg shadow-amber-500/10"
+                    ? "border-[#254D6E]/40 bg-[#254D6E]/5"
                     : puntosVotados === 2
-                    ? "border-slate-300 bg-slate-300/10"
+                    ? "border-[#4A8BB5]/40 bg-[#4A8BB5]/5"
                     : puntosVotados === 1
-                    ? "border-amber-700 bg-amber-700/10"
-                    : "border-slate-800"
+                    ? "border-[#B88F69]/40 bg-[#B88F69]/5"
+                    : "border-slate-200"
                 }`}
               >
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -278,25 +276,25 @@ export default function VotacionPage() {
                   <div className="space-y-3 flex-1">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-[11px] font-medium text-slate-400">
+                        <span className="text-[11px] font-medium text-slate-500">
                           {coord?.nombre || "Coordinación"}
                         </span>
-                        <h3 className="text-lg font-bold text-white">
+                        <h3 className="text-lg font-semibold text-slate-900">
                           {nominado?.nombre_completo || "Colaborador"}
                         </h3>
                       </div>
 
                       {puntosVotados && (
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-black shadow-md ${
+                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
                             puntosVotados === 3
-                              ? "bg-amber-400 text-slate-950"
+                              ? "bg-[#254D6E] text-white"
                               : puntosVotados === 2
-                              ? "bg-slate-200 text-slate-950"
-                              : "bg-amber-700 text-white"
+                              ? "bg-[#4A8BB5] text-white"
+                              : "bg-[#B88F69] text-white"
                           }`}
                         >
-                          ★ {puntosVotados} PUNTOS ASIGNADOS
+                          <Award className="h-3.5 w-3.5" /> {puntosVotados} PUNTOS ASIGNADOS
                         </span>
                       )}
                     </div>
@@ -319,68 +317,68 @@ export default function VotacionPage() {
                     </div>
 
                     {/* Relato */}
-                    <p className="text-xs text-slate-200 leading-relaxed">
+                    <p className="text-xs text-slate-600 leading-relaxed">
                       "{nom.descripcion_hecho}"
                     </p>
 
                     {nom.impacto && (
-                      <div className="text-[11px] text-slate-300 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                        <strong className="text-slate-200">Impacto:</strong> {nom.impacto}
+                      <div className="text-[11px] text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <strong className="text-slate-700">Impacto:</strong> {nom.impacto}
                       </div>
                     )}
 
                     {/* Dictamen Árbitro IA */}
                     {nom.dictamen_ia && (
-                      <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-3 text-xs text-purple-200 space-y-1">
+                      <div className="rounded-lg border border-[#7B6FA0]/20 bg-[#7B6FA0]/5 p-3 text-xs text-slate-600 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-purple-300 flex items-center gap-1">
+                          <span className="font-semibold text-[#7B6FA0] flex items-center gap-1">
                             <Sparkles className="h-3.5 w-3.5" /> Dictamen del Árbitro IA
                           </span>
-                          <span className="font-mono text-amber-300 font-bold">
+                          <span className="font-mono text-[#B88F69] font-semibold">
                             Score Pilares: {nom.score_pilares || 90}/100 · Sesgo: {nom.riesgo_sesgo || 0}%
                           </span>
                         </div>
-                        <p className="text-slate-300 text-[11px]">{nom.dictamen_ia}</p>
+                        <p className="text-slate-500 text-[11px]">{nom.dictamen_ia}</p>
                       </div>
                     )}
                   </div>
 
                   {/* Asignador de Puntos Borda */}
-                  <div className="flex md:flex-col gap-2 shrink-0 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-4">
+                  <div className="flex md:flex-col gap-2 shrink-0 border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-4">
                     <button
                       type="button"
                       onClick={() => handleAsignarPuntos(nom.id, 3)}
-                      className={`flex-1 md:w-36 py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${
+                      className={`flex-1 md:w-40 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
                         puntosVotados === 3
-                          ? "bg-amber-400 text-slate-950 shadow-md shadow-amber-500/30"
-                          : "bg-slate-900 border border-slate-700 text-amber-300 hover:bg-amber-500/20"
+                          ? "bg-[#254D6E] text-white shadow-sm"
+                          : "bg-white border border-slate-200 text-slate-600 hover:border-[#254D6E]/40 hover:text-[#254D6E]"
                       }`}
                     >
-                      🥇 3 Pts (1er Lugar)
+                      3 Pts · 1er Lugar
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleAsignarPuntos(nom.id, 2)}
-                      className={`flex-1 md:w-36 py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${
+                      className={`flex-1 md:w-40 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
                         puntosVotados === 2
-                          ? "bg-slate-200 text-slate-950 shadow-md"
-                          : "bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700"
+                          ? "bg-[#4A8BB5] text-white shadow-sm"
+                          : "bg-white border border-slate-200 text-slate-600 hover:border-[#4A8BB5]/40 hover:text-[#4A8BB5]"
                       }`}
                     >
-                      🥈 2 Pts (2do Lugar)
+                      2 Pts · 2do Lugar
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleAsignarPuntos(nom.id, 1)}
-                      className={`flex-1 md:w-36 py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${
+                      className={`flex-1 md:w-40 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
                         puntosVotados === 1
-                          ? "bg-amber-700 text-white shadow-md"
-                          : "bg-slate-900 border border-slate-700 text-amber-500 hover:bg-amber-800/30"
+                          ? "bg-[#B88F69] text-white shadow-sm"
+                          : "bg-white border border-slate-200 text-slate-600 hover:border-[#B88F69]/40 hover:text-[#B88F69]"
                       }`}
                     >
-                      🥉 1 Pt (3er Lugar)
+                      1 Pt · 3er Lugar
                     </button>
                   </div>
                 </div>
@@ -393,7 +391,7 @@ export default function VotacionPage() {
         <div className="flex justify-end pt-4">
           <button
             type="submit"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-emerald-600 px-8 py-3.5 text-sm font-bold text-slate-950 shadow-lg shadow-emerald-500/20 hover:from-emerald-300 hover:to-emerald-500 transition-all"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#1c3d59] transition-colors"
           >
             <Send className="h-4 w-4" />
             Guardar Boleta de Votación (Borda 3-2-1)

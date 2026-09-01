@@ -19,11 +19,10 @@ const config: Config = {
           innovacion: "#7B6FA0",
         },
         palace: {
-          gold: "#D4AF37",
-          dark: "#0F172A",
-          card: "#1E293B",
-          border: "#334155",
-          accent: "#38BDF8",
+          oceano: "#254D6E",
+          bronce: "#B88F69",
+          azulLigero: "#E0E5E5",
+          perla: "#EDECE4",
         }
       },
     },

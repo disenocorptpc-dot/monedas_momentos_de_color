@@ -146,28 +146,28 @@ export default function NominarPage() {
     <div className="mx-auto max-w-4xl space-y-8 pb-12">
       {/* Encabezado */}
       <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-300">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#B88F69]/30 bg-[#B88F69]/10 px-3 py-1 text-xs font-semibold text-[#B88F69]">
           <Sparkles className="h-3.5 w-3.5" />
           Mesa Alta · Postulación Oficial
         </div>
-        <h1 className="font-serif text-2xl font-bold tracking-tight text-white sm:text-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
           Formulario de Nominación de Talento
         </h1>
-        <p className="text-xs text-slate-400 sm:text-sm">
+        <p className="text-xs text-slate-500 sm:text-sm">
           Registra y documenta un Momento de Color para la deliberación del ciclo {CONVOCATORIA_ACTUAL.ciclo}.
         </p>
       </div>
 
       {/* Alertas */}
       {errorMsg && (
-        <div className="flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-xs font-semibold text-rose-300">
+        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-4 text-xs font-medium text-rose-700">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           {errorMsg}
         </div>
       )}
 
       {guardadoExito && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-xs font-bold text-emerald-300 animate-pulse">
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-700">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           ¡Nominación registrada exitosamente! Redirigiendo al panel de cuotas...
         </div>
@@ -175,15 +175,15 @@ export default function NominarPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Sección 1: Coordinación y Cuota */}
-        <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-xs">1</span>
+        <div className="panel-card rounded-xl p-6 border border-slate-200 space-y-4">
+          <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#B88F69]/15 text-[#B88F69] text-xs font-bold">1</span>
             Coordinación & Cuota Mensual
           </h2>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-medium text-slate-600 mb-1.5">
                 Coordinación Postulante:
               </label>
               <select
@@ -192,7 +192,7 @@ export default function NominarPage() {
                   setCoordinacionId(e.target.value);
                   setNominadoId("");
                 }}
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]/20"
               >
                 {COORDINACIONES_INICIALES.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -200,25 +200,25 @@ export default function NominarPage() {
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-[11px] text-slate-400">
-                Titular Mesa Alta: <span className="text-slate-200 font-medium">{titularMesaAlta?.nombre_completo || "Pendiente"}</span>
+              <p className="mt-1 text-[11px] text-slate-500">
+                Titular Mesa Alta: <span className="text-slate-700 font-medium">{titularMesaAlta?.nombre_completo || "Pendiente"}</span>
               </p>
             </div>
 
             {/* Badge de Cuota */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 flex items-center justify-between">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 flex items-center justify-between">
               <div>
-                <p className="text-[11px] text-slate-400 font-medium">Estado de Cuota ({CONVOCATORIA_ACTUAL.ciclo})</p>
+                <p className="text-[11px] text-slate-500 font-medium">Estado de Cuota ({CONVOCATORIA_ACTUAL.ciclo})</p>
                 <div className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-xl font-extrabold text-white">{cuotaInfo.disponibles}</span>
-                  <span className="text-xs text-slate-400">disponibles de {cuotaInfo.total}</span>
+                  <span className="text-xl font-bold text-slate-900">{cuotaInfo.disponibles}</span>
+                  <span className="text-xs text-slate-500">disponibles de {cuotaInfo.total}</span>
                 </div>
               </div>
               <span
-                className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
                   cuotaInfo.disponibles > 0
-                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                    : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : "bg-rose-50 text-rose-700 border border-rose-200"
                 }`}
               >
                 {cuotaInfo.disponibles > 0 ? "Habilitado" : "Cuota Agotada"}
@@ -228,20 +228,20 @@ export default function NominarPage() {
         </div>
 
         {/* Sección 2: Colaborador Nominado */}
-        <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-xs">2</span>
+        <div className="panel-card rounded-xl p-6 border border-slate-200 space-y-4">
+          <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#B88F69]/15 text-[#B88F69] text-xs font-bold">2</span>
             Colaborador Postulado
           </h2>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-medium text-slate-600 mb-1.5">
               Seleccionar Colaborador del Padrón:
             </label>
             <select
               value={nominadoId}
               onChange={(e) => setNominadoId(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]/20"
             >
               <option value="">-- Selecciona un colaborador --</option>
               {colaboradoresDisponibles.map((colab) => (
@@ -253,7 +253,7 @@ export default function NominarPage() {
 
             {nominadoSeleccionado?.jefe_directo && titularMesaAlta?.nombre_completo &&
               nominadoSeleccionado.jefe_directo.toLowerCase().includes(titularMesaAlta.nombre_completo.toLowerCase()) && (
-                <div className="mt-2.5 flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30 p-2.5 text-[11px] text-amber-300">
+                <div className="mt-2.5 flex items-start gap-2 rounded-lg bg-[#B88F69]/10 border border-[#B88F69]/30 p-2.5 text-[11px] text-[#8a6a4c]">
                   <Info className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>
                     <strong>Aviso de jerarquía:</strong> Eres el jefe directo de este colaborador. La nominación es válida para la deliberación del comité.
@@ -264,13 +264,13 @@ export default function NominarPage() {
         </div>
 
         {/* Sección 3: Pilares (Mínimo 1, Máximo 3) */}
-        <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
+        <div className="panel-card rounded-xl p-6 border border-slate-200 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-xs">3</span>
+            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#B88F69]/15 text-[#B88F69] text-xs font-bold">3</span>
               Pilares de Excelencia (Selecciona de 1 a 3)
             </h2>
-            <span className="text-xs font-bold text-amber-400">
+            <span className="text-xs font-semibold text-[#B88F69]">
               {pilaresSeleccionados.length} / 3 seleccionados
             </span>
           </div>
@@ -283,19 +283,19 @@ export default function NominarPage() {
                   type="button"
                   key={p.clave}
                   onClick={() => togglePilar(p.clave)}
-                  className={`flex flex-col text-left rounded-xl p-3.5 border transition-all ${
+                  className={`flex flex-col text-left rounded-lg p-3.5 border transition-all ${
                     isSelected
-                      ? `border-amber-400 bg-amber-500/15 shadow-md shadow-amber-500/10`
-                      : "border-slate-800 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-900"
+                      ? "border-[#B88F69] bg-[#B88F69]/10 shadow-sm"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] ${formatPilarBadgeColor(p.clave)}`}>
                       {p.nombre}
                     </span>
-                    {isSelected && <CheckCircle2 className="h-4 w-4 text-amber-400" />}
+                    {isSelected && <CheckCircle2 className="h-4 w-4 text-[#B88F69]" />}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">{p.descripcion}</p>
+                  <p className="text-[11px] text-slate-500 leading-tight">{p.descripcion}</p>
                 </button>
               );
             })}
@@ -303,20 +303,20 @@ export default function NominarPage() {
         </div>
 
         {/* Sección 4: Relato del Hecho e Impacto */}
-        <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-xs">4</span>
+        <div className="panel-card rounded-xl p-6 border border-slate-200 space-y-4">
+          <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#B88F69]/15 text-[#B88F69] text-xs font-bold">4</span>
             Evidencia & Relato del Hecho
           </h2>
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold text-slate-300">
+              <label className="text-xs font-medium text-slate-600">
                 Descripción del Hecho (Mínimo 80 caracteres): *
               </label>
               <span
                 className={`text-[11px] font-mono ${
-                  descripcionHecho.trim().length >= 80 ? "text-emerald-400 font-bold" : "text-slate-500"
+                  descripcionHecho.trim().length >= 80 ? "text-emerald-600 font-bold" : "text-slate-400"
                 }`}
               >
                 {descripcionHecho.trim().length} / 80 mín.
@@ -327,12 +327,12 @@ export default function NominarPage() {
               value={descripcionHecho}
               onChange={(e) => setDescripcionHecho(e.target.value)}
               placeholder="Narra con detalle la acción específica, contexto y momento donde el colaborador demostró excelencia..."
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3.5 text-xs text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-white p-3.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]/20"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-medium text-slate-600 mb-1.5">
               Impacto Observable (Opcional):
             </label>
             <textarea
@@ -340,38 +340,38 @@ export default function NominarPage() {
               value={impacto}
               onChange={(e) => setImpacto(e.target.value)}
               placeholder="Consecuencia directa en la satisfacción del huésped, ahorro o fortalecimiento del equipo..."
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3.5 text-xs text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-white p-3.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]/20"
             />
           </div>
 
           {/* Adjunto Fotográfico (Opcional) */}
-          <div className="pt-2 border-t border-slate-800/80">
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+          <div className="pt-2 border-t border-slate-100">
+            <label className="block text-xs font-medium text-slate-600 mb-1.5">
               Evidencia Fotográfica (100% Opcional — Comprimida a ≤1600px en WebP):
             </label>
 
             {!fotoPreview ? (
-              <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-700 bg-slate-950/40 p-5 cursor-pointer hover:border-amber-500/50 hover:bg-slate-900/50 transition-all">
+              <label className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 p-5 cursor-pointer hover:border-[#B88F69]/50 hover:bg-white transition-all">
                 <Upload className="h-6 w-6 text-slate-400 mb-1" />
-                <span className="text-xs font-medium text-slate-300">Seleccionar imagen de evidencia</span>
-                <span className="text-[10px] text-slate-500 mt-0.5">PNG, JPG o WebP</span>
+                <span className="text-xs font-medium text-slate-600">Seleccionar imagen de evidencia</span>
+                <span className="text-[10px] text-slate-400 mt-0.5">PNG, JPG o WebP</span>
                 <input type="file" accept="image/*" onChange={handleFotoUpload} className="hidden" />
               </label>
             ) : (
               <div className="space-y-3">
-                <div className="relative inline-block rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
+                <div className="relative inline-block rounded-lg overflow-hidden border border-slate-200 bg-white">
                   <img src={fotoPreview} alt="Evidencia" className="h-40 w-auto object-cover" />
                   <button
                     type="button"
                     onClick={removeFoto}
-                    className="absolute top-2 right-2 rounded-full bg-black/80 p-1 text-slate-300 hover:text-white"
+                    className="absolute top-2 right-2 rounded-full bg-slate-900/70 p-1 text-white hover:bg-slate-900"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-amber-300 mb-1">
+                  <label className="block text-xs font-medium text-[#B88F69] mb-1">
                     Descripción de la foto (Obligatoria al adjuntar imagen): *
                   </label>
                   <input
@@ -379,7 +379,7 @@ export default function NominarPage() {
                     value={fotoDescripcion}
                     onChange={(e) => setFotoDescripcion(e.target.value)}
                     placeholder="Explica brevemente qué se observa en la fotografía..."
-                    className="w-full rounded-xl border border-amber-500/50 bg-slate-900 px-3.5 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
+                    className="w-full rounded-lg border border-[#B88F69]/40 bg-white px-3.5 py-2 text-xs text-slate-900 focus:border-[#B88F69] focus:outline-none"
                   />
                 </div>
               </div>
@@ -392,14 +392,14 @@ export default function NominarPage() {
           <button
             type="button"
             onClick={() => router.push("/dashboard-mesa-alta")}
-            className="rounded-xl px-5 py-3 text-xs font-medium text-slate-400 hover:text-white"
+            className="rounded-lg px-5 py-3 text-xs font-medium text-slate-500 hover:text-slate-900"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={cuotaInfo.disponibles <= 0}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 px-6 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/20 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 transition-all"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#1c3d59] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="h-4 w-4" />
             Enviar Nominación Oficial

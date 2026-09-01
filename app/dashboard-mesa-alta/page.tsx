@@ -34,21 +34,21 @@ export default function DashboardMesaAltaPage() {
       {/* Encabezado */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-xs font-semibold text-sky-300">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#4A8BB5]/30 bg-[#4A8BB5]/10 px-3 py-1 text-xs font-semibold text-[#4A8BB5]">
             <Award className="h-3.5 w-3.5" />
             Mesa Alta · Control de Cuotas y Postulaciones
           </div>
-          <h1 className="font-serif text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             Cuotas de Coordinaciones ({CONVOCATORIA_ACTUAL.ciclo})
           </h1>
-          <p className="text-xs text-slate-400 sm:text-sm">
+          <p className="text-xs text-slate-500 sm:text-sm">
             Taller y Operaciones cuentan con cuota de 2 postulaciones; el resto de coordinaciones cuenta con 1.
           </p>
         </div>
 
         <Link
           href="/nominar"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 px-5 py-2.5 text-xs font-bold text-slate-950 shadow-lg shadow-amber-500/20 hover:from-amber-300 hover:to-amber-500 transition-all"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#254D6E] px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-[#1c3d59] transition-colors"
         >
           <PlusCircle className="h-4 w-4" />
           Nueva Nominación
@@ -56,19 +56,19 @@ export default function DashboardMesaAltaPage() {
       </div>
 
       {/* Tabla de Cuotas por Coordinación */}
-      <div className="glass-panel rounded-2xl overflow-hidden border border-slate-800">
-        <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+      <div className="panel-card rounded-xl overflow-hidden border border-slate-200">
+        <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
             Resumen de Cuotas por Coordinación
           </h2>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-500">
             Total Asignado: {COORDINACIONES_INICIALES.reduce((acc, c) => acc + c.cuota_mes, 0)} cupos
           </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800">
+            <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
               <tr>
                 <th className="px-5 py-3">Coordinación</th>
                 <th className="px-5 py-3">Titular Mesa Alta</th>
@@ -78,7 +78,7 @@ export default function DashboardMesaAltaPage() {
                 <th className="px-5 py-3 text-right">Estado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
+            <tbody className="divide-y divide-slate-100 text-slate-600">
               {COORDINACIONES_INICIALES.map((coord) => {
                 const titular = COLABORADORES_INICIALES.find(
                   (c) => c.coordinacion_id === coord.id && c.titular_mesa_alta
@@ -89,30 +89,30 @@ export default function DashboardMesaAltaPage() {
                 const disponibles = Math.max(0, coord.cuota_mes - usadas);
 
                 return (
-                  <tr key={coord.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="px-5 py-3.5 font-medium text-white flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-sky-400" />
+                  <tr key={coord.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-5 py-3.5 font-medium text-slate-900 flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-[#4A8BB5]" />
                       {coord.nombre}
                     </td>
-                    <td className="px-5 py-3.5 text-slate-300">
+                    <td className="px-5 py-3.5 text-slate-600">
                       {titular?.nombre_completo || "Por confirmar"}
                     </td>
-                    <td className="px-5 py-3.5 text-center font-bold text-white">
+                    <td className="px-5 py-3.5 text-center font-semibold text-slate-900">
                       {coord.cuota_mes}
                     </td>
-                    <td className="px-5 py-3.5 text-center font-bold text-amber-400">
+                    <td className="px-5 py-3.5 text-center font-semibold text-[#B88F69]">
                       {usadas}
                     </td>
-                    <td className="px-5 py-3.5 text-center font-bold text-emerald-400">
+                    <td className="px-5 py-3.5 text-center font-semibold text-emerald-600">
                       {disponibles}
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       {disponibles === 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2.5 py-0.5 text-[11px] font-semibold text-slate-400 border border-slate-700">
-                          <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Cuota Completa
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-500 border border-slate-200">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Cuota Completa
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-400 border border-emerald-500/30">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 border border-emerald-200">
                           <Clock className="h-3 w-3" /> {disponibles} cupo(s) libre(s)
                         </span>
                       )}
@@ -127,17 +127,17 @@ export default function DashboardMesaAltaPage() {
 
       {/* Lista de Nominaciones Registradas */}
       <div className="space-y-4">
-        <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-amber-400" />
+        <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-[#B88F69]" />
           Postulaciones Registradas en el Ciclo ({nominaciones.length})
         </h2>
 
         {nominaciones.length === 0 ? (
-          <div className="glass-panel rounded-2xl p-8 text-center border border-slate-800 space-y-3">
-            <p className="text-xs text-slate-400">No hay postulaciones registradas en este ciclo aún.</p>
+          <div className="panel-card rounded-xl p-8 text-center border border-slate-200 space-y-3">
+            <p className="text-xs text-slate-500">No hay postulaciones registradas en este ciclo aún.</p>
             <Link
               href="/nominar"
-              className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1c3d59]"
             >
               Registrar Primera Nominación
             </Link>
@@ -152,19 +152,19 @@ export default function DashboardMesaAltaPage() {
               return (
                 <div
                   key={nom.id}
-                  className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4 flex flex-col justify-between"
+                  className="content-card rounded-xl p-5 border border-slate-200 space-y-4 flex flex-col justify-between"
                 >
                   <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2 border-b border-slate-800/80 pb-3">
+                    <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
                       <div>
-                        <p className="text-[11px] text-slate-400 font-medium">
+                        <p className="text-[11px] text-slate-500 font-medium">
                           {coordinacion?.nombre || "Coordinación"}
                         </p>
-                        <h3 className="text-base font-bold text-white">
+                        <h3 className="text-base font-semibold text-slate-900">
                           {nominado?.nombre_completo || "Colaborador"}
                         </h3>
                       </div>
-                      <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400">
+                      <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
                         {nom.estado.toUpperCase()}
                       </span>
                     </div>
@@ -187,29 +187,29 @@ export default function DashboardMesaAltaPage() {
                     </div>
 
                     {/* Relato del Hecho */}
-                    <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
+                    <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
                       "{nom.descripcion_hecho}"
                     </p>
 
                     {nom.impacto && (
-                      <div className="text-[11px] text-slate-400 bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/50">
-                        <strong className="text-slate-300 font-medium">Impacto:</strong> {nom.impacto}
+                      <div className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                        <strong className="text-slate-700 font-medium">Impacto:</strong> {nom.impacto}
                       </div>
                     )}
                   </div>
 
                   {/* Dictamen Árbitro IA */}
                   {nom.dictamen_ia && (
-                    <div className="rounded-xl border border-purple-500/20 bg-purple-950/10 p-3 text-[11px] text-purple-200 space-y-1">
+                    <div className="rounded-lg border border-[#7B6FA0]/20 bg-[#7B6FA0]/5 p-3 text-[11px] text-slate-600 space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-purple-300 flex items-center gap-1">
+                        <span className="font-semibold text-[#7B6FA0] flex items-center gap-1">
                           <ShieldCheck className="h-3.5 w-3.5" /> Dictamen Árbitro IA
                         </span>
-                        <span className="font-mono text-amber-300 font-semibold">
+                        <span className="font-mono text-[#B88F69] font-semibold">
                           Score: {nom.score_pilares || 90}/100
                         </span>
                       </div>
-                      <p className="line-clamp-2 text-slate-300">{nom.dictamen_ia}</p>
+                      <p className="line-clamp-2 text-slate-600">{nom.dictamen_ia}</p>
                     </div>
                   )}
                 </div>
