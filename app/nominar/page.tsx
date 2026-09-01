@@ -8,24 +8,20 @@ import {
   PILARES_INICIALES,
   CONVOCATORIA_ACTUAL,
   Nominacion,
-  Colaborador,
 } from "@/lib/supabase";
 import {
   getCuotaDisponible,
   saveStoredNominacion,
 } from "@/lib/local-store";
-import { formatPilarBadgeColor, formatPilarColor } from "@/lib/utils";
+import { formatPilarBadgeColor } from "@/lib/utils";
 import { comprimirImagen } from "@/lib/image-compress";
-import { DictamenIA, evaluarNominacionConIA } from "@/lib/arbitro-ia";
 import {
   Sparkles,
   Upload,
   CheckCircle2,
   AlertTriangle,
   Info,
-  ShieldCheck,
   Send,
-  Image as ImageIcon,
   X,
 } from "lucide-react";
 
@@ -42,12 +38,8 @@ export default function NominarPage() {
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [fotoDescripcion, setFotoDescripcion] = useState("");
 
-  // Estados de cuota
+  // Estados de cuota y validación
   const [cuotaInfo, setCuotaInfo] = useState({ total: 1, usadas: 0, disponibles: 1 });
-
-  // Estados de Árbitro IA
-  const [auditando, setAuditando] = useState(false);
-  const [dictamenIA, setDictamenIA] = useState<DictamenIA | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [guardadoExito, setGuardadoExito] = useState(false);
 
@@ -102,46 +94,8 @@ export default function NominarPage() {
     setFotoDescripcion("");
   };
 
-  // Ejecutar Árbitro IA en vivo
-  const handleEjecutarArbitro = async () => {
-    if (descripcionHecho.trim().length < 80) {
-      setErrorMsg("El relato del hecho debe tener al menos 80 caracteres para ser auditado.");
-      return;
-    }
-    if (pilaresSeleccionados.length === 0) {
-      setErrorMsg("Selecciona al menos 1 pilar para la auditoría.");
-      return;
-    }
-
-    setErrorMsg("");
-    setAuditando(true);
-
-    try {
-      const nom = nominadoSeleccionado?.nombre_completo || "Colaborador nominado";
-      const coord = COORDINACIONES_INICIALES.find((c) => c.id === coordinacionId)?.nombre || "";
-
-      const res = await evaluarNominacionConIA({
-        nominadoNombre: nom,
-        nominadorNombre: titularMesaAlta?.nombre_completo || "Titular Mesa Alta",
-        coordinacionNombre: coord,
-        jefeDirecto: nominadoSeleccionado?.jefe_directo,
-        pilaresSeleccionados,
-        descripcionHecho,
-        impacto: impacto.trim() || undefined,
-        fotoDescripcion: fotoDescripcion.trim() || undefined,
-      });
-
-      setDictamenIA(res);
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg("No se pudo completar la auditoría con IA. " + err?.message);
-    } finally {
-      setAuditando(false);
-    }
-  };
-
   // Enviar nominación
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!nominadoId) {
@@ -165,21 +119,6 @@ export default function NominarPage() {
       return;
     }
 
-    let dictamenFinal = dictamenIA;
-    if (!dictamenFinal) {
-      // Si no ejecutó el botón de IA antes, lo evaluamos en el envío
-      dictamenFinal = await evaluarNominacionConIA({
-        nominadoNombre: nominadoSeleccionado?.nombre_completo || "",
-        nominadorNombre: titularMesaAlta?.nombre_completo || "",
-        coordinacionNombre: COORDINACIONES_INICIALES.find((c) => c.id === coordinacionId)?.nombre || "",
-        jefeDirecto: nominadoSeleccionado?.jefe_directo,
-        pilaresSeleccionados,
-        descripcionHecho,
-        impacto: impacto.trim() || undefined,
-        fotoDescripcion: fotoDescripcion.trim() || undefined,
-      });
-    }
-
     const nuevaNominacion: Nominacion = {
       id: `nom-${Date.now()}`,
       convocatoria_id: CONVOCATORIA_ACTUAL.id,
@@ -191,10 +130,7 @@ export default function NominarPage() {
       impacto: impacto.trim() || undefined,
       foto_url: fotoPreview || undefined,
       foto_descripcion: fotoDescripcion.trim() || undefined,
-      riesgo_sesgo: dictamenFinal.riesgo_sesgo,
-      score_pilares: dictamenFinal.score_pilares,
-      dictamen_ia: dictamenFinal.dictamen,
-      analisis_ia: dictamenFinal,
+      riesgo_sesgo: 0,
       estado: "aceptada",
     };
 
@@ -203,7 +139,7 @@ export default function NominarPage() {
 
     setTimeout(() => {
       router.push("/dashboard-mesa-alta");
-    }, 1500);
+    }, 1200);
   };
 
   return (
@@ -218,7 +154,7 @@ export default function NominarPage() {
           Formulario de Nominación de Talento
         </h1>
         <p className="text-xs text-slate-400 sm:text-sm">
-          Registra y documenta un Momento de Color. El Árbitro IA auditará la congruencia y el sesgo antes de la votación.
+          Registra y documenta un Momento de Color para la deliberación del ciclo {CONVOCATORIA_ACTUAL.ciclo}.
         </p>
       </div>
 
@@ -320,7 +256,7 @@ export default function NominarPage() {
                 <div className="mt-2.5 flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30 p-2.5 text-[11px] text-amber-300">
                   <Info className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Aviso de jerarquía:</strong> Eres el jefe directo de este colaborador. La nominación es válida, pero el Árbitro IA aplicará una ponderación especial para garantizar imparcialidad.
+                    <strong>Aviso de jerarquía:</strong> Eres el jefe directo de este colaborador. La nominación es válida para la deliberación del comité.
                   </span>
                 </div>
             )}
@@ -397,7 +333,7 @@ export default function NominarPage() {
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Impacto Observable (Opcional, pero otorga mayor ponderación):
+              Impacto Observable (Opcional):
             </label>
             <textarea
               rows={2}
@@ -449,90 +385,6 @@ export default function NominarPage() {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Sección 5: Árbitro con IA y Evaluación en Vivo */}
-        <div className="glass-panel rounded-2xl p-6 border border-purple-500/30 bg-purple-950/10 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-purple-400" />
-                Auditoría en Tiempo Real del Árbitro IA
-              </h2>
-              <p className="text-[11px] text-purple-200">
-                Verifica congruencia con los pilares y calcula el índice de sesgo antes de postular.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleEjecutarArbitro}
-              disabled={auditando || descripcionHecho.trim().length < 80}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-purple-600/20 hover:bg-purple-500 disabled:opacity-50 transition-all"
-            >
-              {auditando ? (
-                <>
-                  <Sparkles className="h-3.5 w-3.5 animate-spin" /> Analizando...
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="h-3.5 w-3.5" /> Auditar con Árbitro IA
-                </>
-              )}
-            </button>
-          </div>
-
-          {dictamenIA && (
-            <div className="rounded-xl border border-purple-500/30 bg-slate-950/80 p-4 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-medium">Alineación a Pilares</span>
-                    <p className="text-lg font-black text-amber-400">{dictamenIA.score_pilares}/100</p>
-                  </div>
-                  <div className="border-l border-slate-800 pl-3">
-                    <span className="text-[10px] text-slate-400 font-medium">Riesgo de Sesgo</span>
-                    <p
-                      className={`text-lg font-black ${
-                        dictamenIA.riesgo_sesgo >= 50
-                          ? "text-rose-400"
-                          : dictamenIA.riesgo_sesgo >= 25
-                          ? "text-amber-400"
-                          : "text-emerald-400"
-                      }`}
-                    >
-                      {dictamenIA.riesgo_sesgo}%
-                    </p>
-                  </div>
-                </div>
-
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    dictamenIA.recomendacion === "Aprobada con Honores"
-                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                      : dictamenIA.recomendacion === "Alerta de Sesgo"
-                      ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                      : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                  }`}
-                >
-                  {dictamenIA.recomendacion}
-                </span>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-white">Dictamen Ejecutivo:</p>
-                <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">{dictamenIA.dictamen}</p>
-              </div>
-
-              <div className="text-[11px] text-slate-400 grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                <div>
-                  <span className="text-slate-300 font-medium">Análisis de Pilares:</span> {dictamenIA.analisis_pilares}
-                </div>
-                <div>
-                  <span className="text-slate-300 font-medium">Auditoría de Sesgo:</span> {dictamenIA.deteccion_sesgo}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Botón Final */}
