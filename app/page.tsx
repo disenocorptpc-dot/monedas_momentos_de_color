@@ -1,274 +1,258 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronRight, Vote, PlusCircle, Sparkles, User } from "lucide-react";
 import {
-  Award,
-  ShieldAlert,
-  Vote,
-  BarChart3,
-  PlusCircle,
-  Sparkles,
-  ChevronRight,
-  Users,
-  CheckCircle2,
-  AlertTriangle,
-} from "lucide-react";
-import {
+  MESA_ALTA_INICIALES,
+  EVALUADORES_INICIALES,
+  COLABORADORES_INICIALES,
   CONVOCATORIA_ACTUAL,
-  COORDINACIONES_INICIALES,
-  PILARES_INICIALES,
-  Nominacion,
-  ComiteInhabilitacion,
 } from "@/lib/supabase";
-import {
-  getStoredNominaciones,
-  getStoredInhabilitaciones,
-  getStoredVotos,
-  getStoredComite,
-} from "@/lib/local-store";
-import { formatPilarBadgeColor } from "@/lib/utils";
+import { getUsuario, setUsuario, clearUsuario, type Usuario } from "@/lib/session";
+import { getStoredNominaciones } from "@/lib/local-store";
+
+// ─── Opciones de selección para el picker ────────────────────────────────────
+const opcionesMesaAlta = MESA_ALTA_INICIALES.map((m) => ({
+  id: m.id,
+  nombre: m.nombre_completo,
+  rol: "mesa_alta" as const,
+  coordinacion_id: m.coordinacion_id,
+}));
+
+const opcionesComite = EVALUADORES_INICIALES.map((e) => ({
+  id: e.id,
+  nombre: e.nombre_completo,
+  rol: "comite" as const,
+  coordinacion_id: e.coordinacion_id,
+}));
+
+const PILARES_COLORES = [
+  { label: "Atención al Detalle",    color: "#E8903A" },
+  { label: "Hospitalidad Emocional", color: "#E8584A" },
+  { label: "Anticipación",           color: "#2A7D6F" },
+  { label: "Trabajo en Equipo",      color: "#4A8BB5" },
+  { label: "Innovación",             color: "#7B6FA0" },
+];
 
 export default function HomePage() {
-  const [nominaciones, setNominaciones] = useState<Nominacion[]>([]);
-  const [inhabilitaciones, setInhabilitaciones] = useState<ComiteInhabilitacion[]>([]);
-  const [totalVotos, setTotalVotos] = useState(0);
-  const [comiteTotal, setComiteTotal] = useState(6);
+  const router = useRouter();
+  const [usuario, setUsuarioState] = useState<Usuario | null>(null);
+  const [seleccion, setSeleccion] = useState("");
+  const [hayNominados, setHayNominados] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setNominaciones(getStoredNominaciones());
-    setInhabilitaciones(getStoredInhabilitaciones());
-    setTotalVotos(getStoredVotos().length);
-    setComiteTotal(getStoredComite().filter((c) => c.es_titular && c.activo).length);
+    setMounted(true);
+    const u = getUsuario();
+    setUsuarioState(u);
+    setHayNominados(getStoredNominaciones().length > 0);
   }, []);
 
-  const votantesInhabilitados = inhabilitaciones.length;
-  const quorumActual = comiteTotal - votantesInhabilitados;
+  const handleIngresar = () => {
+    if (!seleccion) return;
+    const todas = [...opcionesMesaAlta, ...opcionesComite];
+    const found = todas.find((o) => o.id === seleccion);
+    if (!found) return;
+    const u: Usuario = { id: found.id, nombre: found.nombre, rol: found.rol, coordinacion_id: found.coordinacion_id };
+    setUsuario(u);
+    setUsuarioState(u);
+  };
 
-  return (
-    <div className="space-y-10 pb-12">
-      {/* Hero institucional */}
-      <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 sm:p-12 shadow-sm">
-        <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-[#EDECE4] to-transparent pointer-events-none" />
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#B88F69]/30 bg-[#B88F69]/10 px-3 py-1 text-xs font-semibold text-[#B88F69]">
-            <Sparkles className="h-3.5 w-3.5" />
-            Programa de Reconocimiento al Talento Humano
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-            Monedas · <span className="text-[#254D6E]">Momentos de Color</span>
-          </h1>
-          <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
-            Plataforma oficial de The Palace Company para visibilizar y celebrar la excelencia en el servicio, evaluada con arbitraje de Inteligencia Artificial y votación Borda del comité interdepartamental.
-          </p>
+  const handleSalir = () => {
+    clearUsuario();
+    setUsuarioState(null);
+    setSeleccion("");
+  };
 
-          <div className="flex flex-wrap items-center gap-3 pt-4">
-            <Link
-              href="/nominar"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#1c3d59] transition-colors"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Postular Colaborador (Mesa Alta)
-            </Link>
-            <Link
-              href="/votacion"
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-            >
-              <Vote className="h-4 w-4 text-[#4A8BB5]" />
-              Mesa de Votación Comité
-            </Link>
-          </div>
-        </div>
-      </section>
+  if (!mounted) return null;
 
-      {/* Los 5 Pilares de Reconocimiento */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900 tracking-tight flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#B88F69]" />
-            Los 5 Pilares de Excelencia
-          </h2>
-          <span className="text-xs text-slate-500">Selección múltiple (1 a 3 por nominación)</span>
-        </div>
+  // ── Vista: sesión activa ───────────────────────────────────────────────────
+  if (usuario) {
+    const esMesaAlta = usuario.rol === "mesa_alta";
+    return (
+      <div className="flex min-h-[80vh] flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md space-y-6">
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {PILARES_INICIALES.map((pilar) => (
-            <div
-              key={pilar.clave}
-              className="content-card flex flex-col justify-between rounded-xl p-4 border border-slate-200"
-            >
-              <div className="space-y-2">
-                <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] ${formatPilarBadgeColor(pilar.clave)}`}>
-                  {pilar.nombre}
-                </span>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  {pilar.descripcion}
-                </p>
-              </div>
+          {/* Encabezado con bienvenida */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center space-y-3">
+            {/* Dots de pilares */}
+            <div className="flex justify-center gap-1.5 mb-2">
+              {PILARES_COLORES.map((p) => (
+                <span key={p.label} className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Monitor de Estado del Ciclo Activo */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="panel-card rounded-xl p-5 border border-slate-200 flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#B88F69]/10 border border-[#B88F69]/30 text-[#B88F69]">
-            <Award className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-slate-500">Nominaciones Recibidas</p>
-            <p className="text-2xl font-bold text-slate-900">{nominaciones.length}</p>
-            <p className="text-[11px] text-[#B88F69] font-medium">Ciclo: {CONVOCATORIA_ACTUAL.ciclo}</p>
-          </div>
-        </div>
-
-        <div className="panel-card rounded-xl p-5 border border-slate-200 flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#4A8BB5]/10 border border-[#4A8BB5]/30 text-[#4A8BB5]">
-            <Users className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-slate-500">Quórum del Comité</p>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-slate-900">
-                {quorumActual} / {comiteTotal}
+            <p className="text-xs font-medium text-[#B88F69] tracking-widest uppercase">
+              {CONVOCATORIA_ACTUAL.ciclo} · The Palace Company
+            </p>
+            <h1 className="text-2xl font-bold text-slate-900">
+              Monedas · Momentos de Color
+            </h1>
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#254D6E]/10 text-[#254D6E]">
+                <User className="h-4 w-4" />
               </span>
-              {quorumActual >= 4 ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Quórum Válido
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-rose-600">
-                  <AlertTriangle className="h-3.5 w-3.5" /> Requiere Suplente
-                </span>
-              )}
+              <span className="text-sm font-semibold text-slate-800">{usuario.nombre}</span>
+              <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
+                esMesaAlta
+                  ? "bg-[#B88F69]/15 text-[#B88F69] border border-[#B88F69]/30"
+                  : "bg-[#4A8BB5]/10 text-[#4A8BB5] border border-[#4A8BB5]/30"
+              }`}>
+                {esMesaAlta ? "Mesa Alta" : "Comité"}
+              </span>
             </div>
-            <p className="text-[11px] text-slate-500">Mínimo 4 integrantes requeridos</p>
+          </div>
+
+          {/* Acciones */}
+          <div className="space-y-3">
+            {esMesaAlta && (
+              <button
+                onClick={() => router.push("/nominar")}
+                className="flex w-full items-center justify-between rounded-xl border border-[#B88F69]/30 bg-[#B88F69]/5 px-5 py-4 text-left transition-all hover:border-[#B88F69]/60 hover:bg-[#B88F69]/10 group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#B88F69]/15 text-[#B88F69]">
+                    <PlusCircle className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Nominar Colaborador</p>
+                    <p className="text-xs text-slate-500">Postular para este ciclo</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#B88F69] transition-colors" />
+              </button>
+            )}
+
+            <button
+              onClick={() => hayNominados ? router.push("/votacion") : undefined}
+              disabled={!hayNominados}
+              className={`flex w-full items-center justify-between rounded-xl border px-5 py-4 text-left transition-all group ${
+                hayNominados
+                  ? "border-[#2A7D6F]/30 bg-[#2A7D6F]/5 hover:border-[#2A7D6F]/60 hover:bg-[#2A7D6F]/10 cursor-pointer"
+                  : "border-slate-200 bg-slate-50 cursor-not-allowed opacity-60"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                  hayNominados ? "bg-[#2A7D6F]/15 text-[#2A7D6F]" : "bg-slate-100 text-slate-400"
+                }`}>
+                  <Vote className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Emitir Voto (Borda 3-2-1)</p>
+                  <p className="text-xs text-slate-500">
+                    {hayNominados ? "Cámara de votación abierta" : "Esperando nominaciones del ciclo"}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className={`h-4 w-4 transition-colors ${hayNominados ? "text-slate-400 group-hover:text-[#2A7D6F]" : "text-slate-300"}`} />
+            </button>
+          </div>
+
+          {/* Botón salir + acceso admin discreto */}
+          <div className="flex items-center justify-between pt-2">
+            <button
+              onClick={handleSalir}
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              ← Cambiar usuario
+            </button>
+            <a
+              href="/admin"
+              className="flex items-center gap-1 text-xs text-slate-300 hover:text-slate-500 transition-colors"
+              title="Panel de administración"
+            >
+              <Sparkles className="h-3 w-3" />
+              Admin
+            </a>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        <div className="panel-card rounded-xl p-5 border border-slate-200 flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#7B6FA0]/10 border border-[#7B6FA0]/30 text-[#7B6FA0]">
-            <Sparkles className="h-6 w-6" />
+  // ── Vista: selector de identidad ──────────────────────────────────────────
+  return (
+    <div className="flex min-h-[80vh] flex-col items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm space-y-6">
+
+        {/* Logo */}
+        <div className="text-center space-y-3">
+          <div className="flex justify-center gap-1.5">
+            {PILARES_COLORES.map((p) => (
+              <span key={p.label} className="h-3 w-3 rounded-full" style={{ backgroundColor: p.color }} />
+            ))}
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500">Árbitro de Inteligencia Artificial</p>
-            <p className="text-2xl font-bold text-slate-900">Activo</p>
-            <p className="text-[11px] text-[#7B6FA0] font-medium">Auditoría semántica y anti-sesgo</p>
+            <p className="text-xs font-semibold tracking-widest text-[#B88F69] uppercase">
+              The Palace Company · {CONVOCATORIA_ACTUAL.ciclo}
+            </p>
+            <h1 className="mt-1 text-2xl font-bold text-slate-900">
+              Monedas · Momentos de Color
+            </h1>
+            <p className="mt-1 text-xs text-slate-500">Programa de Reconocimiento al Talento Humano</p>
           </div>
         </div>
-      </section>
 
-      {/* Módulos Principales del Sistema */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900 tracking-tight">Accesos a las 5 Pantallas del Sistema</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Tarjeta 1: Nominación */}
-          <Link
-            href="/nominar"
-            className="content-card rounded-xl p-6 border border-slate-200 hover:border-[#B88F69]/40 transition-all flex flex-col justify-between group"
-          >
-            <div className="space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#B88F69]/10 text-[#B88F69] border border-[#B88F69]/20">
-                <PlusCircle className="h-5 w-5" />
-              </div>
-              <h3 className="text-base font-semibold text-slate-900 group-hover:text-[#254D6E] transition-colors">
-                1. Formulario de Nominación
-              </h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Mesa Alta postula colaboradores con selección de 1 a 3 pilares, relato de al menos 80 caracteres, compresión de fotos y análisis de IA en tiempo real.
-              </p>
-            </div>
-            <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-[#254D6E]">
-              Ir a Postulación <ChevronRight className="h-3.5 w-3.5" />
-            </div>
-          </Link>
+        {/* Card de ingreso */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <p className="text-sm font-semibold text-slate-700">¿Quién eres?</p>
 
-          {/* Tarjeta 2: Dashboard Mesa Alta */}
-          <Link
-            href="/dashboard-mesa-alta"
-            className="content-card rounded-xl p-6 border border-slate-200 hover:border-[#4A8BB5]/40 transition-all flex flex-col justify-between group"
-          >
-            <div className="space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#4A8BB5]/10 text-[#4A8BB5] border border-[#4A8BB5]/20">
-                <Award className="h-5 w-5" />
-              </div>
-              <h3 className="text-base font-semibold text-slate-900 group-hover:text-[#254D6E] transition-colors">
-                2. Cuotas de Coordinaciones
-              </h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Seguimiento de cuotas diferenciadas (Taller y Operaciones tienen 2 nominaciones; resto 1) y lista de postulaciones del ciclo.
-              </p>
-            </div>
-            <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-[#254D6E]">
-              Ver Cuotas <ChevronRight className="h-3.5 w-3.5" />
-            </div>
-          </Link>
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-slate-500">Mesa Alta — Coordinadores</label>
+            <select
+              value={seleccion.startsWith("ma-") ? seleccion : ""}
+              onChange={(e) => setSeleccion(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-[#B88F69] focus:outline-none focus:ring-1 focus:ring-[#B88F69]/20"
+            >
+              <option value="">— Selecciona tu nombre —</option>
+              {opcionesMesaAlta.map((o) => (
+                <option key={o.id} value={o.id}>{o.nombre}</option>
+              ))}
+            </select>
+          </div>
 
-          {/* Tarjeta 3: Inhabilitaciones & Comodines */}
-          <Link
-            href="/inhabilitaciones"
-            className="content-card rounded-xl p-6 border border-slate-200 hover:border-[#E8584A]/40 transition-all flex flex-col justify-between group"
-          >
-            <div className="space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E8584A]/10 text-[#E8584A] border border-[#E8584A]/20">
-                <ShieldAlert className="h-5 w-5" />
-              </div>
-              <h3 className="text-base font-semibold text-slate-900 group-hover:text-[#254D6E] transition-colors">
-                3. Comité, Inhabilitaciones & Comodines
-              </h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Detección automática de integrantes de comité nominados, asignación de Comodines de sustitución y monitor de quórum mayor o igual a 4.
-              </p>
-            </div>
-            <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-[#254D6E]">
-              Gestionar Sustitutos <ChevronRight className="h-3.5 w-3.5" />
-            </div>
-          </Link>
+          <div className="relative flex items-center gap-2">
+            <div className="flex-1 border-t border-slate-100" />
+            <span className="text-[10px] text-slate-400 font-medium">o</span>
+            <div className="flex-1 border-t border-slate-100" />
+          </div>
 
-          {/* Tarjeta 4: Mesa de Votación */}
-          <Link
-            href="/votacion"
-            className="content-card rounded-xl p-6 border border-slate-200 hover:border-[#2A7D6F]/40 transition-all flex flex-col justify-between group"
-          >
-            <div className="space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2A7D6F]/10 text-[#2A7D6F] border border-[#2A7D6F]/20">
-                <Vote className="h-5 w-5" />
-              </div>
-              <h3 className="text-base font-semibold text-slate-900 group-hover:text-[#254D6E] transition-colors">
-                4. Mesa de Votación Borda
-              </h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Cámara de votación con método Borda 3-2-1, cards de nominados con dictamen del Árbitro IA y validación contra votos duplicados.
-              </p>
-            </div>
-            <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-[#254D6E]">
-              Emitir Votos <ChevronRight className="h-3.5 w-3.5" />
-            </div>
-          </Link>
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-slate-500">Comité Evaluador</label>
+            <select
+              value={seleccion.startsWith("ev-") ? seleccion : ""}
+              onChange={(e) => setSeleccion(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-[#4A8BB5] focus:outline-none focus:ring-1 focus:ring-[#4A8BB5]/20"
+            >
+              <option value="">— Selecciona tu nombre —</option>
+              {opcionesComite.map((o) => (
+                <option key={o.id} value={o.id}>{o.nombre}</option>
+              ))}
+            </select>
+          </div>
 
-          {/* Tarjeta 5: Resultados */}
-          <Link
-            href="/resultados"
-            className="content-card rounded-xl p-6 border border-slate-200 hover:border-[#7B6FA0]/40 transition-all flex flex-col justify-between group"
+          <button
+            onClick={handleIngresar}
+            disabled={!seleccion}
+            className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-all ${
+              seleccion
+                ? "bg-[#254D6E] text-white hover:bg-[#1c3d59]"
+                : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            }`}
           >
-            <div className="space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#7B6FA0]/10 text-[#7B6FA0] border border-[#7B6FA0]/20">
-                <BarChart3 className="h-5 w-5" />
-              </div>
-              <h3 className="text-base font-semibold text-slate-900 group-hover:text-[#254D6E] transition-colors">
-                5. Cómputo & Resultados
-              </h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Tabla de puntajes finales, anuncio del ganador, distribución de pilares reconocidos y exportador de reporte para Claude.
-              </p>
-            </div>
-            <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-[#254D6E]">
-              Ver Podio y Reportes <ChevronRight className="h-3.5 w-3.5" />
-            </div>
-          </Link>
+            Ingresar
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
-      </section>
+
+        {/* Acceso admin oculto */}
+        <p className="text-center text-[10px] text-slate-300">
+          <a href="/admin" className="hover:text-slate-500 transition-colors">
+            administración ·
+          </a>
+        </p>
+      </div>
     </div>
   );
 }
