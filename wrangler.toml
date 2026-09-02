@@ -5,3 +5,8 @@ pages_build_output_dir = ".vercel/output/static"
 
 [vars]
 NEXT_PUBLIC_APP_ENV = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "monedas-momentos-db"
+database_id = "535be7d8-3b8b-4e6c-b3bb-074a7cc75e09"

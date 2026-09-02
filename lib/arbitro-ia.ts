@@ -109,7 +109,8 @@ DATOS DE LA NOMINACIÓN A AUDITAR:
       );
 
       if (response.ok) {
-        const data = await response.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = await response.json() as any;
         const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (rawText) {
           const parsed = JSON.parse(rawText);
