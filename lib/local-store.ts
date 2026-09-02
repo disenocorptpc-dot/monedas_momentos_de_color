@@ -19,64 +19,12 @@ import {
 } from "./supabase";
 
 const STORAGE_KEYS = {
-  NOMINACIONES: "mmc_nominaciones_v1",
+  NOMINACIONES: "mmc_nominaciones_v2",   // v2: sin datos demo
   COMITE: "mmc_comite_v1",
   INHABILITACIONES: "mmc_inhabilitaciones_v1",
   VOTOS: "mmc_votos_v1",
   CONVOCATORIA: "mmc_convocatoria_v1",
 };
-
-// Nominaciones de ejemplo para iniciar el ciclo (IDs reales del directorio)
-const NOMINACIONES_DEMO: Nominacion[] = [
-  {
-    id: "nom-demo-1",
-    convocatoria_id: CONVOCATORIA_ACTUAL.id,
-    nominado_id: "c1-01", // Jonatan Aguilar - Fotografía
-    nominador_id: "ma-1", // Eva Noya
-    coordinacion_id: "c1",
-    pilares: ["atencion_detalle", "hospitalidad_emocional"],
-    descripcion_hecho:
-      "Durante la sesión de fotos del evento corporativo internacional, Jonatan identificó que la iluminación afectaba la visibilidad de los detalles artesanales en el lobby y ajustó de forma proactiva el set sin detener el flujo del evento, logrando tomas memorables.",
-    impacto: "El cliente corporativo elogió la rapidez y calidad de las memorias entregadas el mismo día.",
-    riesgo_sesgo: 20,
-    score_pilares: 92,
-    dictamen_ia: "Excelente alineación con Atención al Detalle y Hospitalidad Emocional. Relato concreto con impacto verificable.",
-    estado: "aceptada",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "nom-demo-2",
-    convocatoria_id: CONVOCATORIA_ACTUAL.id,
-    nominado_id: "c2-02", // Maria Esther Mendoza - DI 3D
-    nominador_id: "ma-2", // Rufino Santa Rosa
-    coordinacion_id: "c2",
-    pilares: ["innovacion", "anticipacion"],
-    descripcion_hecho:
-      "Desarrolló un modelo paramétrico 3D para la señalética del nuevo resort en tiempo récord, anticipando las restricciones de manufactura de taller y reduciendo los tiempos de prototipado a la mitad.",
-    impacto: "Ahorro del 40% en costos de material de prueba y entrega anticipada para la inspección.",
-    riesgo_sesgo: 0,
-    score_pilares: 95,
-    dictamen_ia: "Postulación sólida. Claramente ejemplifica Innovación y Anticipación. Datos de impacto cuantitativos.",
-    estado: "aceptada",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "nom-demo-3",
-    convocatoria_id: CONVOCATORIA_ACTUAL.id,
-    nominado_id: "c5-01", // Jonatan Daniel Durán Rosado - Taller
-    nominador_id: "ma-5", // Miguel Angel Barquín
-    coordinacion_id: "c5",
-    pilares: ["trabajo_equipo", "hospitalidad_emocional"],
-    descripcion_hecho:
-      "Apoyó voluntariamente al equipo de montaje durante el fin de semana para restaurar piezas decorativas que sufrieron un percance antes de la apertura del salón principal, manteniendo un espíritu positivo y motivador.",
-    impacto: "El salón abrió a tiempo con 100% de los estándares de marca intactos.",
-    riesgo_sesgo: 10,
-    score_pilares: 88,
-    dictamen_ia: "Relato consistente que refleja Trabajo en Equipo y compromiso con la experiencia.",
-    estado: "aceptada",
-    created_at: new Date().toISOString(),
-  },
-];
 
 export function getStoredConvocatoria(): Convocatoria {
   if (typeof window === "undefined") return CONVOCATORIA_ACTUAL;
@@ -93,7 +41,7 @@ export function getStoredConvocatoria(): Convocatoria {
 }
 
 export function getStoredNominaciones(): Nominacion[] {
-  if (typeof window === "undefined") return NOMINACIONES_DEMO;
+  if (typeof window === "undefined") return [];
   const data = localStorage.getItem(STORAGE_KEYS.NOMINACIONES);
   if (data) {
     try {
@@ -102,9 +50,9 @@ export function getStoredNominaciones(): Nominacion[] {
       console.error(e);
     }
   }
-  localStorage.setItem(STORAGE_KEYS.NOMINACIONES, JSON.stringify(NOMINACIONES_DEMO));
-  return NOMINACIONES_DEMO;
+  return [];
 }
+
 
 export function saveStoredNominacion(nom: Nominacion): Nominacion[] {
   const current = getStoredNominaciones();
