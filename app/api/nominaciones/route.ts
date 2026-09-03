@@ -44,8 +44,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(data);
   } catch (err: any) {
-    console.error("Error en GET /api/nominaciones:", err);
-    return NextResponse.json({ error: err?.message || "Error interno" }, { status: 500 });
+    return NextResponse.json({ error: String(err?.message || err) }, { status: 500 });
   }
 }
 
@@ -85,7 +84,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, id });
   } catch (err: any) {
-    console.error("Error en POST /api/nominaciones:", err);
-    return NextResponse.json({ error: err?.message || "Error interno" }, { status: 500 });
+    return NextResponse.json({ error: String(err?.message || err) }, { status: 500 });
   }
 }
