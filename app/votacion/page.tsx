@@ -17,6 +17,10 @@ import {
   getStoredNominaciones,
   getStoredVotos,
   saveStoredVotos,
+  fetchNominaciones,
+  fetchVotos,
+  fetchInhabilitaciones,
+  pushVotos,
 } from "@/lib/local-store";
 import { formatPilarBadgeColor } from "@/lib/utils";
 import { validarBoletaBorda } from "@/lib/borda";
@@ -27,6 +31,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Send,
+  Loader2,
 } from "lucide-react";
 
 export default function VotacionPage() {
@@ -40,8 +45,10 @@ export default function VotacionPage() {
   const [puntosAsignados, setPuntosAsignados] = useState<Record<string, 1 | 2 | 3>>({});
   const [errorMsg, setErrorMsg] = useState("");
   const [exitoMsg, setExitoMsg] = useState("");
+  const [guardandoVotos, setGuardandoVotos] = useState(false);
 
   useEffect(() => {
+    // 1. Carga rápida desde caché local
     const com = getStoredComite();
     const inhab = getStoredInhabilitaciones();
     const nom = getStoredNominaciones().filter((n) => n.estado === "aceptada");
@@ -51,6 +58,23 @@ export default function VotacionPage() {
     setInhabilitaciones(inhab);
     setNominaciones(nom);
     setVotosRegistrados(vot);
+
+    // 2. Cargar datos frescos en segundo plano desde la base de datos central
+    Promise.all([
+      fetchNominaciones(),
+      fetchVotos(),
+      fetchInhabilitaciones(),
+    ]).then(([noms, vots, inhabs]) => {
+      if (Array.isArray(noms) && noms.length > 0) {
+        setNominaciones(noms.filter((n) => n.estado === "aceptada"));
+      }
+      if (Array.isArray(vots) && vots.length > 0) {
+        setVotosRegistrados(vots);
+      }
+      if (Array.isArray(inhabs) && inhabs.length > 0) {
+        setInhabilitaciones(inhabs);
+      }
+    });
 
     // Seleccionar primer votante habilitado
     const primerHabilitado = com.find((m) => {
@@ -123,7 +147,7 @@ export default function VotacionPage() {
   };
 
   // Enviar boleta de votación
-  const handleSubmitVotos = (e: React.FormEvent) => {
+  const handleSubmitVotos = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (isInhabilitadoSinSuplente) {
@@ -151,9 +175,19 @@ export default function VotacionPage() {
       created_at: new Date().toISOString(),
     }));
 
-    const updated = saveStoredVotos(nuevosVotos);
-    setVotosRegistrados(updated);
-    setExitoMsg("¡Votos registrados exitosamente con método Borda (3-2-1)!");
+    setGuardandoVotos(true);
+    setErrorMsg("");
+
+    try {
+      await pushVotos(nuevosVotos);
+      const updated = saveStoredVotos(nuevosVotos);
+      setVotosRegistrados(updated);
+      setExitoMsg("¡Votos registrados exitosamente con método Borda (3-2-1) en el sistema central!");
+    } catch {
+      setErrorMsg("Ocurrió un problema al enviar los votos a la nube. Intenta de nuevo.");
+    } finally {
+      setGuardandoVotos(false);
+    }
   };
 
   return (
@@ -391,10 +425,20 @@ export default function VotacionPage() {
         <div className="flex justify-end pt-4">
           <button
             type="submit"
-            className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#1c3d59] transition-colors"
+            disabled={guardandoVotos}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#1c3d59] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <Send className="h-4 w-4" />
-            Guardar Boleta de Votación (Borda 3-2-1)
+            {guardandoVotos ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Registrando votos en la nube...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Guardar Boleta de Votación (Borda 3-2-1)
+              </>
+            )}
           </button>
         </div>
       </form>

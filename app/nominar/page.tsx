@@ -11,7 +11,8 @@ import {
 } from "@/lib/supabase";
 import {
   getCuotaDisponible,
-  saveStoredNominacion,
+  pushNominacion,
+  fetchNominaciones,
 } from "@/lib/local-store";
 import { formatPilarBadgeColor } from "@/lib/utils";
 import { comprimirImagen } from "@/lib/image-compress";
@@ -23,6 +24,7 @@ import {
   Info,
   Send,
   X,
+  Loader2,
 } from "lucide-react";
 
 export default function NominarPage() {
@@ -41,11 +43,14 @@ export default function NominarPage() {
   // Estados de cuota y validación
   const [cuotaInfo, setCuotaInfo] = useState({ total: 1, usadas: 0, disponibles: 1 });
   const [errorMsg, setErrorMsg] = useState("");
+  const [guardando, setGuardando] = useState(false);
   const [guardadoExito, setGuardadoExito] = useState(false);
 
   // Actualizar cuota cuando cambia coordinación
   useEffect(() => {
-    setCuotaInfo(getCuotaDisponible(coordinacionId));
+    fetchNominaciones().then((noms) => {
+      setCuotaInfo(getCuotaDisponible(coordinacionId, noms));
+    });
   }, [coordinacionId]);
 
   // Colaboradores filtrados por coordinación
@@ -95,7 +100,7 @@ export default function NominarPage() {
   };
 
   // Enviar nominación
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!nominadoId) {
@@ -134,12 +139,20 @@ export default function NominarPage() {
       estado: "aceptada",
     };
 
-    saveStoredNominacion(nuevaNominacion);
-    setGuardadoExito(true);
+    setGuardando(true);
+    setErrorMsg("");
 
-    setTimeout(() => {
-      router.push("/dashboard-mesa-alta");
-    }, 1200);
+    try {
+      await pushNominacion(nuevaNominacion);
+      setGuardadoExito(true);
+      setTimeout(() => {
+        router.push("/dashboard-mesa-alta");
+      }, 1200);
+    } catch (err: any) {
+      setErrorMsg("Ocurrió un problema al guardar la postulación. Por favor reintenta.");
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -398,11 +411,20 @@ export default function NominarPage() {
           </button>
           <button
             type="submit"
-            disabled={cuotaInfo.disponibles <= 0}
+            disabled={cuotaInfo.disponibles <= 0 || guardando}
             className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#1c3d59] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <Send className="h-4 w-4" />
-            Enviar Nominación Oficial
+            {guardando ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Guardando en la nube...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Enviar Nominación Oficial
+              </>
+            )}
           </button>
         </div>
       </form>

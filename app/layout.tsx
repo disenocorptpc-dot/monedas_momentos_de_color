@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
+import { AutoSyncRescue } from "@/components/AutoSyncRescue";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default function RootLayout({
     <html lang="es">
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased selection:bg-[#B88F69]/25 selection:text-slate-900">
         <Navbar />
+        <AutoSyncRescue />
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {children}
         </main>

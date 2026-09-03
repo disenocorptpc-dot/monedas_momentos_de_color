@@ -9,7 +9,7 @@ import {
   CONVOCATORIA_ACTUAL,
   Nominacion,
 } from "@/lib/supabase";
-import { getStoredNominaciones } from "@/lib/local-store";
+import { getStoredNominaciones, fetchNominaciones } from "@/lib/local-store";
 import { formatPilarBadgeColor } from "@/lib/utils";
 import {
   Award,
@@ -26,7 +26,14 @@ export default function DashboardMesaAltaPage() {
   const [nominaciones, setNominaciones] = useState<Nominacion[]>([]);
 
   useEffect(() => {
+    // Carga rápida inicial desde caché local
     setNominaciones(getStoredNominaciones());
+    // Consulta en segundo plano y actualización desde la nube
+    fetchNominaciones().then((data) => {
+      if (Array.isArray(data)) {
+        setNominaciones(data);
+      }
+    });
   }, []);
 
   return (

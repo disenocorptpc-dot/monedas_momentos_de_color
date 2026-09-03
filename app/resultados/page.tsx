@@ -16,6 +16,9 @@ import {
   getStoredInhabilitaciones,
   getStoredNominaciones,
   getStoredVotos,
+  fetchNominaciones,
+  fetchVotos,
+  fetchInhabilitaciones,
 } from "@/lib/local-store";
 import { formatPilarBadgeColor } from "@/lib/utils";
 import { calcularComputoBorda, ComputoCiclo } from "@/lib/borda";
@@ -35,6 +38,7 @@ export default function ResultadosPage() {
   const [copiado, setCopiado] = useState(false);
 
   useEffect(() => {
+    // 1. Cómputo rápido inicial con caché local
     const com = getStoredComite();
     const inhab = getStoredInhabilitaciones();
     const nom = getStoredNominaciones().filter((n) => n.estado === "aceptada");
@@ -51,6 +55,35 @@ export default function ResultadosPage() {
       CONVOCATORIA_ACTUAL.quorum_minimo
     );
     setComputo(res);
+
+    // 2. Cómputo con datos en tiempo real de la base de datos central
+    Promise.all([
+      fetchNominaciones(),
+      fetchVotos(),
+      fetchInhabilitaciones(),
+    ]).then(([nomsServer, votsServer, inhabsServer]) => {
+      const activeNoms = Array.isArray(nomsServer) && nomsServer.length > 0
+        ? nomsServer.filter((n) => n.estado === "aceptada")
+        : nom;
+      const activeVots = Array.isArray(votsServer) && votsServer.length > 0
+        ? votsServer
+        : vot;
+      const activeInhabs = Array.isArray(inhabsServer) && inhabsServer.length > 0
+        ? inhabsServer
+        : inhab;
+
+      setNominaciones(activeNoms);
+      const resServer = calcularComputoBorda(
+        activeNoms,
+        activeVots,
+        com,
+        activeInhabs,
+        COLABORADORES_INICIALES,
+        PILARES_INICIALES,
+        CONVOCATORIA_ACTUAL.quorum_minimo
+      );
+      setComputo(resServer);
+    });
   }, []);
 
   const handleCopiarParaClaude = () => {
