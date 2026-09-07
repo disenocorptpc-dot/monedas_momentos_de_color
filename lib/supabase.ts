@@ -49,7 +49,7 @@ export interface Nominacion {
   score_pilares?: number;
   dictamen_ia?: string;
   analisis_ia?: any;
-  estado: "borrador" | "enviada" | "aceptada" | "rechazada";
+  estado: "borrador" | "enviada" | "aceptada" | "rechazada" | "desierta";
   created_at?: string;
   updated_at?: string;
 }

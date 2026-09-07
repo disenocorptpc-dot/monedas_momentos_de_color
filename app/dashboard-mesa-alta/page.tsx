@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   COORDINACIONES_INICIALES,
   COLABORADORES_INICIALES,
+  MESA_ALTA_INICIALES,
   PILARES_INICIALES,
   CONVOCATORIA_ACTUAL,
   Nominacion,
@@ -20,6 +21,7 @@ import {
   ExternalLink,
   ShieldCheck,
   AlertTriangle,
+  Ban,
 } from "lucide-react";
 
 export default function DashboardMesaAltaPage() {
@@ -87,8 +89,13 @@ export default function DashboardMesaAltaPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-600">
               {COORDINACIONES_INICIALES.map((coord) => {
-                const titular = COLABORADORES_INICIALES.find(
-                  (c) => c.coordinacion_id === coord.id && c.titular_mesa_alta
+                const titular =
+                  MESA_ALTA_INICIALES.find((m) => m.coordinacion_id === coord.id) ||
+                  COLABORADORES_INICIALES.find(
+                    (c) => c.coordinacion_id === coord.id && c.titular_mesa_alta
+                  );
+                const tieneDesierta = nominaciones.some(
+                  (n) => n.coordinacion_id === coord.id && n.estado === "desierta"
                 );
                 const usadas = nominaciones.filter(
                   (n) => n.coordinacion_id === coord.id && n.estado !== "rechazada"
@@ -114,7 +121,11 @@ export default function DashboardMesaAltaPage() {
                       {disponibles}
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      {disponibles === 0 ? (
+                      {tieneDesierta ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-800 border border-amber-200">
+                          <Ban className="h-3 w-3 text-amber-600" /> Sin nominados (Pasa)
+                        </span>
+                      ) : disponibles === 0 ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-500 border border-slate-200">
                           <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Cuota Completa
                         </span>
@@ -153,8 +164,43 @@ export default function DashboardMesaAltaPage() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {nominaciones.map((nom) => {
               const nominado = COLABORADORES_INICIALES.find((c) => c.id === nom.nominado_id);
-              const nominador = COLABORADORES_INICIALES.find((c) => c.id === nom.nominador_id);
+              const nominador =
+                MESA_ALTA_INICIALES.find((m) => m.id === nom.nominador_id) ||
+                COLABORADORES_INICIALES.find((c) => c.id === nom.nominador_id);
               const coordinacion = COORDINACIONES_INICIALES.find((c) => c.id === nom.coordinacion_id);
+
+              if (nom.estado === "desierta") {
+                return (
+                  <div
+                    key={nom.id}
+                    className="content-card rounded-xl p-5 border border-amber-200 bg-amber-50/40 space-y-3 flex flex-col justify-between"
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-start justify-between gap-2 border-b border-amber-200/60 pb-3">
+                        <div>
+                          <p className="text-[11px] text-amber-800 font-medium">
+                            {coordinacion?.nombre || "Coordinación"}
+                          </p>
+                          <h3 className="text-base font-semibold text-slate-800 flex items-center gap-1.5">
+                            <Ban className="h-4 w-4 text-amber-600" />
+                            Sin Candidatos Postulados
+                          </h3>
+                        </div>
+                        <span className="rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-[10px] font-semibold text-amber-900">
+                          TURNO PASADO
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 italic">
+                        "{nom.descripcion_hecho}"
+                      </p>
+                    </div>
+                    <div className="text-[11px] text-slate-500 pt-2 border-t border-amber-200/60 flex items-center justify-between">
+                      <span>Titular: <strong className="text-slate-700 font-medium">{nominador?.nombre_completo || "Rufino Santa Rosa"}</strong></span>
+                      <span className="text-[10px] text-amber-800 font-medium">Ciclo {CONVOCATORIA_ACTUAL.ciclo}</span>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div

@@ -220,10 +220,11 @@ export function saveStoredVotos(nuevosVotos: ComiteVoto[]): ComiteVoto[] {
   return updated;
 }
 
-export function getCuotaDisponible(coordinacionId: string, listaNominaciones?: Nominacion[]): { total: number; usadas: number; disponibles: number } {
+export function getCuotaDisponible(coordinacionId: string, listaNominaciones?: Nominacion[]): { total: number; usadas: number; disponibles: number; tieneDesierta: boolean } {
   const coord = COORDINACIONES_INICIALES.find((c) => c.id === coordinacionId);
   const total = coord?.cuota_mes || 1;
   const nominaciones = listaNominaciones ?? getStoredNominaciones();
+  const tieneDesierta = nominaciones.some((n) => n.coordinacion_id === coordinacionId && n.estado === "desierta");
   const usadas = nominaciones.filter((n) => n.coordinacion_id === coordinacionId && n.estado !== "rechazada").length;
-  return { total, usadas, disponibles: Math.max(0, total - usadas) };
+  return { total, usadas, disponibles: Math.max(0, total - usadas), tieneDesierta };
 }

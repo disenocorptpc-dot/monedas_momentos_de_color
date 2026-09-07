@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   COORDINACIONES_INICIALES,
   COLABORADORES_INICIALES,
+  MESA_ALTA_INICIALES,
   PILARES_INICIALES,
   CONVOCATORIA_ACTUAL,
   Nominacion,
@@ -25,6 +26,7 @@ import {
   Send,
   X,
   Loader2,
+  Ban,
 } from "lucide-react";
 
 export default function NominarPage() {
@@ -41,10 +43,16 @@ export default function NominarPage() {
   const [fotoDescripcion, setFotoDescripcion] = useState("");
 
   // Estados de cuota y validación
-  const [cuotaInfo, setCuotaInfo] = useState({ total: 1, usadas: 0, disponibles: 1 });
+  const [cuotaInfo, setCuotaInfo] = useState<{ total: number; usadas: number; disponibles: number; tieneDesierta?: boolean }>({ total: 1, usadas: 0, disponibles: 1 });
   const [errorMsg, setErrorMsg] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [guardadoExito, setGuardadoExito] = useState(false);
+
+  // Estados para declarar sin nominados (pasar ciclo)
+  const [showPasarModal, setShowPasarModal] = useState(false);
+  const [motivoPasar, setMotivoPasar] = useState("");
+  const [guardandoPasar, setGuardandoPasar] = useState(false);
+  const [paseExitoso, setPaseExitoso] = useState(false);
 
   // Actualizar cuota cuando cambia coordinación
   useEffect(() => {
@@ -58,9 +66,11 @@ export default function NominarPage() {
     (c) => c.coordinacion_id === coordinacionId && c.activo
   );
 
-  const titularMesaAlta = COLABORADORES_INICIALES.find(
-    (c) => c.coordinacion_id === coordinacionId && c.titular_mesa_alta
-  );
+  const coordinacionActual = COORDINACIONES_INICIALES.find((c) => c.id === coordinacionId);
+
+  const titularMesaAlta =
+    MESA_ALTA_INICIALES.find((m) => m.coordinacion_id === coordinacionId) ||
+    COLABORADORES_INICIALES.find((c) => c.coordinacion_id === coordinacionId && c.titular_mesa_alta);
 
   const nominadoSeleccionado = COLABORADORES_INICIALES.find((c) => c.id === nominadoId);
 
@@ -155,6 +165,37 @@ export default function NominarPage() {
     }
   };
 
+  // Manejar pase de turno (declarar sin nominados)
+  const handleConfirmarPasar = async () => {
+    setGuardandoPasar(true);
+    setErrorMsg("");
+
+    const nominacionDesierta: Nominacion = {
+      id: `nom-pass-${coordinacionId}-${CONVOCATORIA_ACTUAL.id}`,
+      convocatoria_id: CONVOCATORIA_ACTUAL.id,
+      nominado_id: "sin_nominado",
+      nominador_id: titularMesaAlta?.id || "ma-2",
+      coordinacion_id: coordinacionId,
+      pilares: [],
+      descripcion_hecho: motivoPasar.trim() || "La coordinación declara formalmente desierta su postulación para este ciclo.",
+      riesgo_sesgo: 0,
+      estado: "desierta",
+    };
+
+    try {
+      await pushNominacion(nominacionDesierta);
+      setShowPasarModal(false);
+      setPaseExitoso(true);
+      setTimeout(() => {
+        router.push("/dashboard-mesa-alta");
+      }, 1500);
+    } catch (err: any) {
+      setErrorMsg("Ocurrió un error al registrar el pase de turno. Por favor intenta de nuevo.");
+    } finally {
+      setGuardandoPasar(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-12">
       {/* Encabezado */}
@@ -183,6 +224,13 @@ export default function NominarPage() {
         <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-700">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           ¡Nominación registrada exitosamente! Redirigiendo al panel de cuotas...
+        </div>
+      )}
+
+      {paseExitoso && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs font-semibold text-amber-900">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-700" />
+          ¡Se ha registrado que tu coordinación pasa su turno este ciclo! Redirigiendo al panel de cuotas...
         </div>
       )}
 
@@ -229,12 +277,18 @@ export default function NominarPage() {
               </div>
               <span
                 className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                  cuotaInfo.disponibles > 0
+                  cuotaInfo.tieneDesierta
+                    ? "bg-amber-50 text-amber-800 border border-amber-200"
+                    : cuotaInfo.disponibles > 0
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                     : "bg-rose-50 text-rose-700 border border-rose-200"
                 }`}
               >
-                {cuotaInfo.disponibles > 0 ? "Habilitado" : "Cuota Agotada"}
+                {cuotaInfo.tieneDesierta
+                  ? "Turno Pasado"
+                  : cuotaInfo.disponibles > 0
+                  ? "Habilitado"
+                  : "Cuota Agotada"}
               </span>
             </div>
           </div>
@@ -400,34 +454,118 @@ export default function NominarPage() {
           </div>
         </div>
 
-        {/* Botón Final */}
-        <div className="flex justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => router.push("/dashboard-mesa-alta")}
-            className="rounded-lg px-5 py-3 text-xs font-medium text-slate-500 hover:text-slate-900"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={cuotaInfo.disponibles <= 0 || guardando}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#1c3d59] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {guardando ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Guardando en la nube...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                Enviar Nominación Oficial
-              </>
-            )}
-          </button>
+        {/* Botones de Acción */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-slate-200">
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowPasarModal(true)}
+              disabled={guardando || guardandoPasar || cuotaInfo.tieneDesierta}
+              className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Ban className="h-4 w-4 text-amber-700" />
+              {cuotaInfo.tieneDesierta ? "Turno ya declarado desierto" : "Declarar Sin Nominados (Pasar Ciclo)"}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard-mesa-alta")}
+              className="rounded-lg px-5 py-3 text-xs font-medium text-slate-500 hover:text-slate-900"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={cuotaInfo.disponibles <= 0 || guardando}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#1c3d59] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {guardando ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Guardando en la nube...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Enviar Nominación Oficial
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
+
+      {/* Modal: Declarar Sin Nominados / Pasar Ciclo */}
+      {showPasarModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-5">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                <Ban className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  Declarar Sin Nominados · {coordinacionActual?.nombre}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Ciclo {CONVOCATORIA_ACTUAL.ciclo} · Titular: {titularMesaAlta?.nombre_completo || "Rufino Santa Rosa"}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-xs text-amber-900 space-y-2">
+              <p className="font-semibold">¿Confirmas que tu coordinación no postulará candidatos este ciclo?</p>
+              <p className="text-amber-800 leading-relaxed">
+                Esta acción registrará formalmente que tu área pasa su turno en esta convocatoria. Tu cuota se marcará como concluida en el Dashboard de Mesa Alta y el comité deliberador podrá proceder con la votación entre las candidaturas activas sin dejar cuotas en espera.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-700">
+                Motivo o Justificación (Opcional):
+              </label>
+              <textarea
+                rows={3}
+                value={motivoPasar}
+                onChange={(e) => setMotivoPasar(e.target.value)}
+                placeholder="Ej. Durante este ciclo no se registraron acciones extraordinarias que califiquen a la Moneda Momento de Color..."
+                className="w-full rounded-lg border border-slate-200 p-3 text-xs text-slate-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowPasarModal(false)}
+                disabled={guardandoPasar}
+                className="rounded-lg px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmarPasar}
+                disabled={guardandoPasar}
+                className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-amber-700 transition-colors disabled:opacity-50"
+              >
+                {guardandoPasar ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Registrando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Confirmar y Pasar Turno
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
