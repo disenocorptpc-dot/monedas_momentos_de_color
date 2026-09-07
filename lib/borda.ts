@@ -7,16 +7,22 @@ import {
   Pilar,
 } from "./supabase";
 
+export const NUMERO_MONEDAS_A_REPARTIR = 4;
+
 export interface ResultadoNominacion {
   nominacion: Nominacion;
   colaborador?: Colaborador;
   puntosTotales: number;
+  votos3Pts: number;
+  votos2Pts: number;
+  votos1Pt: number;
   votosDetalle: {
     integranteId: string;
     votoPor: string;
     puntos: 1 | 2 | 3;
   }[];
   posicion?: number;
+  esGanadorMoneda?: boolean;
 }
 
 export interface ComputoCiclo {
@@ -25,6 +31,8 @@ export interface ComputoCiclo {
   tieneQuorum: boolean;
   totalVotosEmitidos: number;
   maxPuntosPosibles: number;
+  monedasDisponibles: number;
+  monedasAsignadas: number;
   resultados: ResultadoNominacion[];
   distribucionPilares: {
     pilar: Pilar;
@@ -34,7 +42,7 @@ export interface ComputoCiclo {
 }
 
 /**
- * Calcula el cómputo final de la votación Borda (3-2-1)
+ * Calcula el cómputo final de la votación Borda (3-2-1) y asigna las 4 Monedas de Color
  */
 export function calcularComputoBorda(
   nominaciones: Nominacion[],
@@ -59,15 +67,22 @@ export function calcularComputoBorda(
       nominacion: nom,
       colaborador: colab,
       puntosTotales: 0,
+      votos3Pts: 0,
+      votos2Pts: 0,
+      votos1Pt: 0,
       votosDetalle: [],
     });
   });
 
-  // Sumar puntos Borda
+  // Sumar puntos Borda y desglosar votos
   votos.forEach((voto) => {
     const item = resultadosMap.get(voto.nominacion_id);
     if (item) {
       item.puntosTotales += voto.puntos;
+      if (voto.puntos === 3) item.votos3Pts += 1;
+      else if (voto.puntos === 2) item.votos2Pts += 1;
+      else if (voto.puntos === 1) item.votos1Pt += 1;
+
       const integrante = comite.find((c) => c.id === voto.integrante_id);
       const colabIntegrante = colaboradores.find(
         (c) => c.id === integrante?.colaborador_id
@@ -80,14 +95,26 @@ export function calcularComputoBorda(
     }
   });
 
-  // Ordenar por puntos totales descendente
+  // Ordenar por puntos totales descendente con desempate Borda oficial:
+  // 1. Puntos totales Borda
+  // 2. Mayor cantidad de votos de 3 puntos (1er lugar en boletas)
+  // 3. Mayor cantidad de votos de 2 puntos (2do lugar en boletas)
   const resultadosOrdenados = Array.from(resultadosMap.values()).sort(
-    (a, b) => b.puntosTotales - a.puntosTotales
+    (a, b) => {
+      if (b.puntosTotales !== a.puntosTotales) {
+        return b.puntosTotales - a.puntosTotales;
+      }
+      if (b.votos3Pts !== a.votos3Pts) {
+        return b.votos3Pts - a.votos3Pts;
+      }
+      return b.votos2Pts - a.votos2Pts;
+    }
   );
 
-  // Asignar posiciones
+  // Asignar posiciones y marcar los 4 galardonados a la Moneda de Color
   resultadosOrdenados.forEach((r, idx) => {
     r.posicion = idx + 1;
+    r.esGanadorMoneda = idx < NUMERO_MONEDAS_A_REPARTIR && r.puntosTotales > 0;
   });
 
   // Distribución de pilares
@@ -115,6 +142,10 @@ export function calcularComputoBorda(
     tieneQuorum,
     totalVotosEmitidos: votos.length,
     maxPuntosPosibles: votantesValidos * 6, // 3 + 2 + 1 = 6 por votante
+    monedasDisponibles: NUMERO_MONEDAS_A_REPARTIR,
+    monedasAsignadas: tieneQuorum
+      ? resultadosOrdenados.filter((r) => r.esGanadorMoneda).length
+      : 0,
     resultados: resultadosOrdenados,
     distribucionPilares,
   };

@@ -1,4 +1,4 @@
-﻿# Especificación Técnica — Monedas · Momentos de Color
+# Especificación Técnica — Monedas · Momentos de Color
 *Fuente de verdad para el agente de construcción*
 
 ---
@@ -212,7 +212,19 @@ CREATE POLICY "comite_ve_todas_aceptadas" ON nominaciones
 | P2 | Dashboard Mesa Alta | Lista ciclo activo, cuota usada/disponible |
 | P3 | Inhabilitaciones | Lista inhabilitados, designar suplente, quórum actual |
 | P4 | Panel Votación Comité | Cards nominaciones, selección Borda 3-2-1, validación sin duplicados |
-| P5 | Resultados | Tabla puntajes, gráfico pilares por coordinación, ganador destacado |
+| P5 | Resultados | Tabla puntajes, gráfico pilares por coordinación, Cuarteto de Honor (4 Monedas de Color oficiales) y menciones honoríficas |
+
+---
+
+## Regla de Asignación de Monedas & Desempate Borda
+
+1. **Cuota de Premiación**: En cada ciclo de votación se otorgan **4 Monedas de Color** a los 4 colaboradores con mayor puntuación acumulada en el cómputo Borda (Top 4).
+2. **Criterio Oficial de Desempate (Borda Tie-Break)**:
+   - En caso de empate en puntos totales entre dos o más candidatos:
+     1. Mayor cantidad de votos de primer lugar (boletas con 3 puntos).
+     2. Mayor cantidad de votos de segundo lugar (boletas con 2 puntos).
+     3. Si el empate persiste de forma idéntica, ambos comparten posición y el Comité define la resolución.
+3. **Menciones Honoríficas**: Los candidatos clasificados del 5to lugar en adelante son reconocidos como Finalistas con Mención Honorífica.
 
 ---
 

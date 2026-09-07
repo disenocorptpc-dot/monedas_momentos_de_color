@@ -21,7 +21,7 @@ import {
   fetchInhabilitaciones,
 } from "@/lib/local-store";
 import { formatPilarBadgeColor } from "@/lib/utils";
-import { calcularComputoBorda, ComputoCiclo } from "@/lib/borda";
+import { calcularComputoBorda, ComputoCiclo, NUMERO_MONEDAS_A_REPARTIR } from "@/lib/borda";
 import { generarReporteClaudePrompt } from "@/lib/arbitro-ia";
 import {
   BarChart3,
@@ -30,6 +30,8 @@ import {
   Copy,
   Check,
   Download,
+  Award,
+  Medal,
 } from "lucide-react";
 
 export default function ResultadosPage() {
@@ -87,7 +89,7 @@ export default function ResultadosPage() {
   }, []);
 
   const handleCopiarParaClaude = () => {
-    const texto = generarReporteClaudePrompt(nominaciones, CONVOCATORIA_ACTUAL.ciclo);
+    const texto = generarReporteClaudePrompt(nominaciones, CONVOCATORIA_ACTUAL.ciclo, computo);
     navigator.clipboard.writeText(texto);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2500);
@@ -109,12 +111,13 @@ export default function ResultadosPage() {
     return <div className="p-8 text-center text-xs text-slate-400">Calculando cómputo Borda...</div>;
   }
 
-  const ganador = computo.resultados[0];
+  const ganadores = computo.resultados.filter((r) => r.esGanadorMoneda);
 
   const posicionBadge = (posicion?: number) => {
-    if (posicion === 1) return "bg-[#B88F69] text-white";
-    if (posicion === 2) return "bg-slate-300 text-slate-700";
-    if (posicion === 3) return "bg-[#254D6E]/20 text-[#254D6E]";
+    if (posicion === 1) return "bg-[#B88F69] text-white shadow-sm";
+    if (posicion === 2) return "bg-slate-500 text-white shadow-sm";
+    if (posicion === 3) return "bg-[#A77B50] text-white shadow-sm";
+    if (posicion === 4) return "bg-[#254D6E] text-white shadow-sm";
     return "bg-slate-100 text-slate-500";
   };
 
@@ -131,7 +134,7 @@ export default function ResultadosPage() {
             Resultados — {CONVOCATORIA_ACTUAL.ciclo}
           </h1>
           <p className="text-xs text-slate-500 sm:text-sm">
-            Cómputo por método Borda (3-2-1) auditado por Árbitro IA.
+            Cómputo por método Borda (3-2-1) asignando las <strong>4 Monedas de Color</strong> del ciclo.
           </p>
         </div>
 
@@ -182,67 +185,112 @@ export default function ResultadosPage() {
         </div>
 
         <div className="panel-card rounded-xl p-5 border border-slate-200 space-y-1">
-          <p className="text-xs text-slate-500 font-medium">Reconocimiento del Mes</p>
-          <p className="text-2xl font-bold text-slate-900">
-            {ganador?.colaborador?.nombre_completo || "Pendiente"}
-          </p>
-          <p className="text-[11px] text-[#B88F69] font-medium">
-            {ganador?.puntosTotales || 0} Puntos Borda
+          <p className="text-xs text-slate-500 font-medium">Monedas Asignadas</p>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-slate-900">
+              {computo.monedasAsignadas} / {computo.monedasDisponibles}
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#B88F69]/10 text-[#8a6a4c] border border-[#B88F69]/30">
+              Top 4 Borda
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-500">
+            {computo.tieneQuorum ? "4 Galardonados oficiales" : "Quórum pendiente"}
           </p>
         </div>
       </div>
 
-      {/* Podio / Ganador Destacado */}
-      {ganador && (
-        <div className="relative overflow-hidden rounded-2xl border border-[#B88F69]/30 bg-white p-6 sm:p-8 shadow-sm">
-          <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-[#EDECE4] to-transparent pointer-events-none" />
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#B88F69] px-3 py-1 text-xs font-bold text-white shadow-sm">
-                <Crown className="h-4 w-4" /> GANADOR DE LA MONEDA DE COLOR
+      {/* Escaparate de Honor: Las 4 Monedas de Color */}
+      {ganadores.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="space-y-0.5">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#B88F69] px-3 py-0.5 text-[11px] font-bold text-white shadow-sm">
+                <Crown className="h-3.5 w-3.5" /> CUARTETO DE HONOR — 4 MONEDAS DE COLOR
               </div>
-
-              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900">
-                {ganador.colaborador?.nombre_completo}
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+                Colaboradores Galardonados ({CONVOCATORIA_ACTUAL.ciclo})
               </h2>
-
-              <p className="text-xs text-slate-600 leading-relaxed italic">
-                "{ganador.nominacion.descripcion_hecho}"
+              <p className="text-xs text-slate-500">
+                Las 4 postulaciones más votadas por el Comité que reciben la condecoración oficial.
               </p>
-
-              {ganador.nominacion.impacto && (
-                <p className="text-xs text-slate-700 bg-[#EDECE4] p-3 rounded-lg border border-[#B88F69]/20">
-                  <strong>Impacto:</strong> {ganador.nominacion.impacto}
-                </p>
-              )}
-
-              {/* Pilares */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {ganador.nominacion.pilares.map((pKey) => {
-                  const pilar = PILARES_INICIALES.find((p) => p.clave === pKey);
-                  return (
-                    <span
-                      key={pKey}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${formatPilarBadgeColor(
-                        pKey
-                      )}`}
-                    >
-                      {pilar?.nombre || pKey}
-                    </span>
-                  );
-                })}
-              </div>
             </div>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold self-start sm:self-auto">
+              <Award className="h-4 w-4 text-emerald-600" />
+              {ganadores.length} de {NUMERO_MONEDAS_A_REPARTIR} Asignadas
+            </span>
+          </div>
 
-            <div className="flex flex-col items-center justify-center rounded-xl bg-[#B88F69]/10 border border-[#B88F69]/30 p-6 text-center shrink-0">
-              <span className="text-xs font-semibold text-[#8a6a4c] uppercase tracking-wide">
-                Puntaje Final
-              </span>
-              <span className="text-5xl font-bold text-[#B88F69] my-1">
-                {ganador.puntosTotales}
-              </span>
-              <span className="text-[11px] text-slate-500">Puntos Borda</span>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {ganadores.map((ganador) => {
+              const coordinacion = COORDINACIONES_INICIALES.find(
+                (c) => c.id === ganador.nominacion.coordinacion_id
+              );
+
+              return (
+                <div
+                  key={ganador.nominacion.id}
+                  className="relative overflow-hidden rounded-2xl border border-[#B88F69]/30 bg-white p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-4"
+                >
+                  <div className="absolute right-0 top-0 h-24 w-24 bg-gradient-to-bl from-[#EDECE4] to-transparent pointer-events-none rounded-bl-full" />
+                  
+                  <div className="space-y-3 relative z-10">
+                    <div className="flex items-center justify-between">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${posicionBadge(ganador.posicion)}`}>
+                        <Medal className="h-3.5 w-3.5" />
+                        #{ganador.posicion} Moneda de Color
+                      </span>
+                      <div className="text-right">
+                        <span className="text-2xl font-bold text-[#B88F69]">
+                          {ganador.puntosTotales} pts
+                        </span>
+                        <p className="text-[10px] text-slate-400">
+                          {ganador.votos3Pts > 0 ? `${ganador.votos3Pts}x(3pts) ` : ""}
+                          {ganador.votos2Pts > 0 ? `${ganador.votos2Pts}x(2pts) ` : ""}
+                          {ganador.votos1Pt > 0 ? `${ganador.votos1Pt}x(1pt)` : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">
+                        {ganador.colaborador?.nombre_completo || "Colaborador"}
+                      </h3>
+                      <p className="text-xs text-slate-500 font-medium">
+                        {coordinacion?.nombre || "Coordinación"}
+                      </p>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed italic bg-slate-50/80 p-3 rounded-lg border border-slate-100">
+                      "{ganador.nominacion.descripcion_hecho}"
+                    </p>
+
+                    {ganador.nominacion.impacto && (
+                      <p className="text-xs text-slate-700 bg-[#EDECE4]/60 p-2.5 rounded-lg border border-[#B88F69]/20">
+                        <strong>Impacto:</strong> {ganador.nominacion.impacto}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Pilares */}
+                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100 relative z-10">
+                    {ganador.nominacion.pilares.map((pKey) => {
+                      const pilar = PILARES_INICIALES.find((p) => p.clave === pKey);
+                      return (
+                        <span
+                          key={pKey}
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${formatPilarBadgeColor(
+                            pKey
+                          )}`}
+                        >
+                          {pilar?.nombre || pKey}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -253,7 +301,7 @@ export default function ResultadosPage() {
           <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
             Tabla General de Posiciones
           </h3>
-          <span className="text-xs text-slate-500">Método Borda 3-2-1</span>
+          <span className="text-xs text-slate-500">Método Borda 3-2-1 · Desempate Oficial</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -275,8 +323,19 @@ export default function ResultadosPage() {
                       {res.posicion}
                     </span>
                   </td>
-                  <td className="px-5 py-4 font-semibold text-slate-900">
-                    {res.colaborador?.nombre_completo || "Colaborador"}
+                  <td className="px-5 py-4">
+                    <div className="font-semibold text-slate-900">
+                      {res.colaborador?.nombre_completo || "Colaborador"}
+                    </div>
+                    {res.esGanadorMoneda ? (
+                      <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-[#8a6a4c] bg-[#B88F69]/15 border border-[#B88F69]/30 px-2 py-0.5 rounded-full">
+                        🪙 Moneda de Color
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        Mención Honorífica
+                      </span>
+                    )}
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-1">
@@ -292,8 +351,15 @@ export default function ResultadosPage() {
                       ))}
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-center font-bold text-[#B88F69] text-sm">
-                    {res.puntosTotales} pts
+                  <td className="px-5 py-4 text-center">
+                    <div className="font-bold text-[#B88F69] text-sm">
+                      {res.puntosTotales} pts
+                    </div>
+                    <div className="text-[10px] text-slate-400">
+                      {res.votos3Pts > 0 ? `${res.votos3Pts}x(3pts) ` : ""}
+                      {res.votos2Pts > 0 ? `${res.votos2Pts}x(2pts) ` : ""}
+                      {res.votos1Pt > 0 ? `${res.votos1Pt}x(1pt)` : ""}
+                    </div>
                   </td>
                   <td className="px-5 py-4 text-slate-500 text-[11px]">
                     {res.votosDetalle.length > 0 ? (

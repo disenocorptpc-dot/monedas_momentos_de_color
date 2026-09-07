@@ -203,22 +203,63 @@ function evaluarConMotorLocal(input: EvaluacionInput, esJefeDirecto: boolean): D
   };
 }
 
+import type { ComputoCiclo } from "./borda";
+
 /**
  * Genera el prompt estructurado completo para copiar y pegar en Claude.ai o ChatGPT
  */
-export function generarReporteClaudePrompt(nominaciones: any[], ciclo: string): string {
+export function generarReporteClaudePrompt(
+  nominaciones: any[],
+  ciclo: string,
+  computo?: ComputoCiclo | null
+): string {
   const lineas = [
     `# AUDITORÍA DE ÁRBITRO — PROGRAMA MONEDAS · MOMENTOS DE COLOR`,
     `The Palace Company · Ciclo: ${ciclo}`,
+    `Regla Oficial: Se entregan 4 Monedas de Color por ciclo (Top 4 del Cómputo Borda 3-2-1).`,
     `Fecha de exportación: ${new Date().toLocaleDateString()}`,
     ``,
     `Instrucción para el LLM / Claude:`,
-    `Actúa como el Árbitro Oficial de Cultura Organizacional. Revisa las siguientes ${nominaciones.length} nominaciones del ciclo actual contra los 5 pilares institucionales (Atención al Detalle, Hospitalidad Emocional, Anticipación, Trabajo en Equipo, Innovación) y emite un informe ejecutivo identificando los momentos más sobresalientes y cualquier posible sesgo.`,
-    ``,
-    `---`,
-    `## NOMINACIONES DEL CICLO:`,
+    `Actúa como el Árbitro Oficial de Cultura Organizacional y Ceremonial de The Palace Company. Revisa el resultado de la votación y las nominaciones del ciclo actual frente a los 5 pilares institucionales (Atención al Detalle, Hospitalidad Emocional, Anticipación, Trabajo en Equipo, Innovación). Emite un dictamen formal de entrega para los 4 Galardonados con la Moneda de Color y un análisis de mérito para los finalistas.`,
     ``,
   ];
+
+  if (computo && computo.resultados.length > 0) {
+    lineas.push(`---`);
+    lineas.push(`## RESUMEN DEL CÓMPUTO OFICIAL BORDA (3-2-1):`);
+    lineas.push(`- Votantes válidos: ${computo.votantesValidos} (Quórum: ${computo.tieneQuorum ? "CUMPLIDO" : "NO CUMPLIDO"})`);
+    lineas.push(`- Total votos emitidos: ${computo.totalVotosEmitidos}`);
+    lineas.push(`- Monedas asignadas: ${computo.monedasAsignadas} de 4`);
+    lineas.push(``);
+
+    lineas.push(`### 🪙 CUARTETO DE HONOR — GALARDONADOS A LA MONEDA DE COLOR:`);
+    const ganadores = computo.resultados.filter((r) => r.esGanadorMoneda);
+    ganadores.forEach((g) => {
+      lineas.push(
+        `#${g.posicion} | ${g.colaborador?.nombre_completo || "Colaborador"} — ${g.puntosTotales} pts Borda (${g.votos3Pts} votos de 3 pts, ${g.votos2Pts} votos de 2 pts)`
+      );
+      lineas.push(`  - Pilares: ${g.nominacion.pilares?.join(", ")}`);
+      lineas.push(`  - Hecho: "${g.nominacion.descripcion_hecho}"`);
+      if (g.nominacion.impacto) lineas.push(`  - Impacto: "${g.nominacion.impacto}"`);
+      lineas.push(``);
+    });
+
+    const finalistas = computo.resultados.filter((r) => !r.esGanadorMoneda);
+    if (finalistas.length > 0) {
+      lineas.push(`### 🎖️ FINALISTAS CON MENCIÓN HONORÍFICA:`);
+      finalistas.forEach((f) => {
+        lineas.push(
+          `#${f.posicion} | ${f.colaborador?.nombre_completo || "Colaborador"} — ${f.puntosTotales} pts Borda`
+        );
+        lineas.push(`  - Hecho: "${f.nominacion.descripcion_hecho}"`);
+      });
+      lineas.push(``);
+    }
+  }
+
+  lineas.push(`---`);
+  lineas.push(`## TODAS LAS NOMINACIONES REGISTRADAS (${nominaciones.length}):`);
+  lineas.push(``);
 
   nominaciones.forEach((nom, index) => {
     lineas.push(`### ${index + 1}. Nominado ID: ${nom.nominado_id}`);
@@ -235,9 +276,10 @@ export function generarReporteClaudePrompt(nominaciones: any[], ciclo: string): 
 
   lineas.push(`---`);
   lineas.push(`POR FAVOR RESPONDE CON:`);
-  lineas.push(`1. Resumen ejecutivo del ciclo.`);
-  lineas.push(`2. Ranking de las 3 nominaciones con mayor mérito y por qué.`);
-  lineas.push(`3. Observaciones de mejora para la Mesa Alta en redacción de evidencias.`);
+  lineas.push(`1. Resumen ejecutivo de la jornada y auditoría de quórum.`);
+  lineas.push(`2. Dictamen oficial de reconocimiento para cada uno de los 4 Galardonados con la Moneda de Color, resaltando el pilar central demostrado y el impacto en el servicio.`);
+  lineas.push(`3. Mención honorífica para los finalistas.`);
+  lineas.push(`4. Recomendaciones para la Mesa Alta respecto a la precisión y calidad de las evidencias redactadas.`);
 
   return lineas.join("\n");
 }
