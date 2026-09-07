@@ -52,8 +52,15 @@ export async function onRequestPost({ request, env }) {
          score_pilares, dictamen_ia, estado)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       ON CONFLICT(id) DO UPDATE SET
-        pilares=excluded.pilares, descripcion_hecho=excluded.descripcion_hecho,
-        impacto=excluded.impacto, estado=excluded.estado, updated_at=datetime('now')
+        nominado_id=excluded.nominado_id,
+        coordinacion_id=excluded.coordinacion_id,
+        pilares=excluded.pilares,
+        descripcion_hecho=excluded.descripcion_hecho,
+        impacto=excluded.impacto,
+        foto_url=excluded.foto_url,
+        foto_descripcion=excluded.foto_descripcion,
+        estado=excluded.estado,
+        updated_at=datetime('now')
     `).bind(
       id,
       body.convocatoria_id,

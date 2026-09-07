@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   AlertTriangle,
   Ban,
+  Pencil,
 } from "lucide-react";
 
 export default function DashboardMesaAltaPage() {
@@ -265,6 +266,20 @@ export default function DashboardMesaAltaPage() {
                       <p className="line-clamp-2 text-slate-600">{nom.dictamen_ia}</p>
                     </div>
                   )}
+
+                  {/* Pie de tarjeta con autor y botón de edición */}
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <span className="text-[11px] text-slate-500 truncate">
+                      Postulado por: <strong className="text-slate-700 font-medium">{nominador?.nombre_completo || "Titular Mesa Alta"}</strong>
+                    </span>
+                    <Link
+                      href={`/nominar?edit=${nom.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-[#254D6E] hover:border-[#254D6E]/40 hover:bg-slate-50 transition-all shadow-sm shrink-0"
+                    >
+                      <Pencil className="h-3 w-3 text-[#254D6E]" />
+                      Editar Postulación
+                    </Link>
+                  </div>
                 </div>
               );
             })}

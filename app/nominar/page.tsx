@@ -15,7 +15,8 @@ import {
   pushNominacion,
   fetchNominaciones,
 } from "@/lib/local-store";
-import { formatPilarBadgeColor } from "@/lib/utils";
+import { formatPilarBadgeColor, getPilarTheme } from "@/lib/utils";
+import { getUsuario } from "@/lib/session";
 import { comprimirImagen } from "@/lib/image-compress";
 import {
   Sparkles,
@@ -27,10 +28,16 @@ import {
   X,
   Loader2,
   Ban,
+  Pencil,
 } from "lucide-react";
 
 export default function NominarPage() {
   const router = useRouter();
+
+  // Estados de modo edición
+  const [editId, setEditId] = useState<string | null>(null);
+  const [originalNom, setOriginalNom] = useState<Nominacion | null>(null);
+  const [cargandoEdicion, setCargandoEdicion] = useState(false);
 
   // Estados del formulario
   const [coordinacionId, setCoordinacionId] = useState(COORDINACIONES_INICIALES[0].id);
@@ -54,6 +61,40 @@ export default function NominarPage() {
   const [guardandoPasar, setGuardandoPasar] = useState(false);
   const [paseExitoso, setPaseExitoso] = useState(false);
 
+  // Inicialización de modo edición o auto-selección de coordinación por usuario
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const idToEdit = params.get("edit");
+    const coordParam = params.get("coord");
+
+    if (idToEdit) {
+      setEditId(idToEdit);
+      setCargandoEdicion(true);
+      fetchNominaciones().then((noms) => {
+        const found = noms.find((n) => n.id === idToEdit);
+        if (found) {
+          setOriginalNom(found);
+          setCoordinacionId(found.coordinacion_id);
+          setNominadoId(found.nominado_id);
+          setPilaresSeleccionados(found.pilares || []);
+          setDescripcionHecho(found.descripcion_hecho || "");
+          setImpacto(found.impacto || "");
+          setFotoPreview(found.foto_url || null);
+          setFotoDescripcion(found.foto_descripcion || "");
+        }
+        setCargandoEdicion(false);
+      });
+    } else if (coordParam) {
+      setCoordinacionId(coordParam);
+    } else {
+      const user = getUsuario();
+      if (user?.coordinacion_id) {
+        setCoordinacionId(user.coordinacion_id);
+      }
+    }
+  }, []);
+
   // Actualizar cuota cuando cambia coordinación
   useEffect(() => {
     fetchNominaciones().then((noms) => {
@@ -73,6 +114,7 @@ export default function NominarPage() {
     COLABORADORES_INICIALES.find((c) => c.coordinacion_id === coordinacionId && c.titular_mesa_alta);
 
   const nominadoSeleccionado = COLABORADORES_INICIALES.find((c) => c.id === nominadoId);
+  const isEditingSameCoord = Boolean(editId && originalNom && originalNom.coordinacion_id === coordinacionId);
 
   // Toggle de selección de pilares (mínimo 1, máximo 3)
   const togglePilar = (clave: string) => {
@@ -109,7 +151,7 @@ export default function NominarPage() {
     setFotoDescripcion("");
   };
 
-  // Enviar nominación
+  // Enviar o actualizar nominación
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -129,31 +171,35 @@ export default function NominarPage() {
       setErrorMsg("Si adjuntas una imagen, la descripción de qué se ve es obligatoria.");
       return;
     }
-    if (cuotaInfo.disponibles <= 0) {
+
+    const isEditingSameCoord = Boolean(editId && originalNom && originalNom.coordinacion_id === coordinacionId);
+    if (!isEditingSameCoord && cuotaInfo.disponibles <= 0) {
       setErrorMsg("Esta coordinación ya utilizó toda su cuota de nominaciones para este ciclo.");
       return;
     }
 
-    const nuevaNominacion: Nominacion = {
-      id: `nom-${Date.now()}`,
+    const nominacionAGuardar: Nominacion = {
+      id: editId || originalNom?.id || `nom-${Date.now()}`,
       convocatoria_id: CONVOCATORIA_ACTUAL.id,
       nominado_id: nominadoId,
-      nominador_id: titularMesaAlta?.id || "col-1",
+      nominador_id: originalNom?.nominador_id || titularMesaAlta?.id || "col-1",
       coordinacion_id: coordinacionId,
       pilares: pilaresSeleccionados,
       descripcion_hecho: descripcionHecho.trim(),
       impacto: impacto.trim() || undefined,
       foto_url: fotoPreview || undefined,
       foto_descripcion: fotoDescripcion.trim() || undefined,
-      riesgo_sesgo: 0,
-      estado: "aceptada",
+      riesgo_sesgo: originalNom?.riesgo_sesgo || 0,
+      score_pilares: originalNom?.score_pilares,
+      dictamen_ia: originalNom?.dictamen_ia,
+      estado: originalNom?.estado || "aceptada",
     };
 
     setGuardando(true);
     setErrorMsg("");
 
     try {
-      await pushNominacion(nuevaNominacion);
+      await pushNominacion(nominacionAGuardar);
       setGuardadoExito(true);
       setTimeout(() => {
         router.push("/dashboard-mesa-alta");
@@ -200,15 +246,21 @@ export default function NominarPage() {
     <div className="mx-auto max-w-4xl space-y-8 pb-12">
       {/* Encabezado */}
       <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#B88F69]/30 bg-[#B88F69]/10 px-3 py-1 text-xs font-semibold text-[#B88F69]">
-          <Sparkles className="h-3.5 w-3.5" />
-          Mesa Alta · Postulación Oficial
+        <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${
+          editId 
+            ? "border-blue-300 bg-blue-50 text-blue-800"
+            : "border-[#B88F69]/30 bg-[#B88F69]/10 text-[#B88F69]"
+        }`}>
+          {editId ? <Pencil className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
+          {editId ? "Modo Edición de Postulación" : "Mesa Alta · Postulación Oficial"}
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Formulario de Nominación de Talento
+          {editId ? "Editar Nominación de Talento" : "Formulario de Nominación de Talento"}
         </h1>
         <p className="text-xs text-slate-500 sm:text-sm">
-          Registra y documenta un Momento de Color para la deliberación del ciclo {CONVOCATORIA_ACTUAL.ciclo}.
+          {editId 
+            ? `Actualiza la información, pilares y relato de la postulación para la deliberación del ciclo ${CONVOCATORIA_ACTUAL.ciclo}.`
+            : `Registra y documenta un Momento de Color para la deliberación del ciclo ${CONVOCATORIA_ACTUAL.ciclo}.`}
         </p>
       </div>
 
@@ -223,7 +275,9 @@ export default function NominarPage() {
       {guardadoExito && (
         <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-700">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          ¡Nominación registrada exitosamente! Redirigiendo al panel de cuotas...
+          {editId 
+            ? "¡Nominación actualizada exitosamente! Redirigiendo al panel de cuotas..."
+            : "¡Nominación registrada exitosamente! Redirigiendo al panel de cuotas..."}
         </div>
       )}
 
@@ -277,14 +331,18 @@ export default function NominarPage() {
               </div>
               <span
                 className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                  cuotaInfo.tieneDesierta
+                  isEditingSameCoord
+                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                    : cuotaInfo.tieneDesierta
                     ? "bg-amber-50 text-amber-800 border border-amber-200"
                     : cuotaInfo.disponibles > 0
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                     : "bg-rose-50 text-rose-700 border border-rose-200"
                 }`}
               >
-                {cuotaInfo.tieneDesierta
+                {isEditingSameCoord
+                  ? "Postulación Existente"
+                  : cuotaInfo.tieneDesierta
                   ? "Turno Pasado"
                   : cuotaInfo.disponibles > 0
                   ? "Habilitado"
@@ -345,24 +403,42 @@ export default function NominarPage() {
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {PILARES_INICIALES.map((p) => {
               const isSelected = pilaresSeleccionados.includes(p.clave);
+              const theme = getPilarTheme(p.clave);
               return (
                 <button
                   type="button"
                   key={p.clave}
                   onClick={() => togglePilar(p.clave)}
-                  className={`flex flex-col text-left rounded-lg p-3.5 border transition-all ${
+                  className={`relative flex flex-col text-left rounded-xl p-4 border-2 transition-all ${
                     isSelected
-                      ? "border-[#B88F69] bg-[#B88F69]/10 shadow-sm"
-                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                      ? "shadow-sm"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70"
                   }`}
+                  style={{
+                    borderColor: isSelected ? theme.color : undefined,
+                    backgroundColor: isSelected ? `${theme.color}12` : undefined,
+                  }}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${formatPilarBadgeColor(p.clave)}`}>
-                      {p.nombre}
-                    </span>
-                    {isSelected && <CheckCircle2 className="h-4 w-4 text-[#B88F69]" />}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: theme.color }}
+                      />
+                      <span
+                        className="font-bold text-xs"
+                        style={{ color: theme.color }}
+                      >
+                        {p.nombre}
+                      </span>
+                    </div>
+                    {isSelected ? (
+                      <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: theme.color }} />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border border-slate-300 shrink-0" />
+                    )}
                   </div>
-                  <p className="text-[11px] text-slate-500 leading-tight">{p.descripcion}</p>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">{p.descripcion}</p>
                 </button>
               );
             })}
@@ -478,13 +554,18 @@ export default function NominarPage() {
             </button>
             <button
               type="submit"
-              disabled={cuotaInfo.disponibles <= 0 || guardando}
+              disabled={(!isEditingSameCoord && cuotaInfo.disponibles <= 0) || guardando || cargandoEdicion}
               className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#1c3d59] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {guardando ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Guardando en la nube...
+                </>
+              ) : editId ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Guardar Cambios de Postulación
                 </>
               ) : (
                 <>
