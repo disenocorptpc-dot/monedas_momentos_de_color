@@ -233,6 +233,33 @@ export const EVALUADORES_INICIALES: Colaborador[] = [
   { id: "ev-6", nombre_completo: "Cristina Coba",          coordinacion_id: "c4", activo: true },
 ];
 
+export const TODOS_LOS_COLABORADORES: Colaborador[] = [
+  ...COLABORADORES_INICIALES,
+  ...EVALUADORES_INICIALES,
+  ...MESA_ALTA_INICIALES,
+];
+
+/**
+ * Busca un colaborador por cualquier variante de su ID (c*-*, ev-*, ma-*, cmd-*)
+ */
+export function findColaborador(id?: string | null): Colaborador | undefined {
+  if (!id) return undefined;
+  const evMap: Record<string, string> = {
+    "ev-1": "c1-01",
+    "ev-2": "c5-05",
+    "ev-3": "c2-01",
+    "ev-4": "c6-03",
+    "ev-5": "c3-06",
+    "ev-6": "c4-05",
+  };
+  const resolvedId = evMap[id] || id;
+  return (
+    COLABORADORES_INICIALES.find((c) => c.id === resolvedId || c.id === id) ||
+    EVALUADORES_INICIALES.find((c) => c.id === id || c.id === resolvedId) ||
+    MESA_ALTA_INICIALES.find((c) => c.id === id || c.id === resolvedId)
+  );
+}
+
 export const CONVOCATORIA_ACTUAL: Convocatoria = {
   id: "conv-2026-09",
   ciclo: "Septiembre 2026",

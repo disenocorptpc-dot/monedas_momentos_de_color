@@ -10,6 +10,7 @@ import {
   ComiteIntegrante,
   ComiteVoto,
   Nominacion,
+  findColaborador,
 } from "@/lib/supabase";
 import {
   getStoredComite,
@@ -115,7 +116,7 @@ export default function VotacionPage() {
   });
 
   const votanteActual = comite.find((c) => c.id === votanteActualId);
-  const votanteColab = COLABORADORES_INICIALES.find((c) => c.id === votanteActual?.colaborador_id);
+  const votanteColab = findColaborador(votanteActual?.colaborador_id);
   const votanteCoord = COORDINACIONES_INICIALES.find((c) => c.id === votanteActual?.coordinacion_id);
 
   const isInhabilitadoSinSuplente = inhabilitaciones.some(
@@ -219,14 +220,14 @@ export default function VotacionPage() {
               className="w-full sm:w-80 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]/20"
             >
               {comite.map((miembro) => {
-                const c = COLABORADORES_INICIALES.find((col) => col.id === miembro.colaborador_id);
+                const c = findColaborador(miembro.colaborador_id);
                 const coord = COORDINACIONES_INICIALES.find((co) => co.id === miembro.coordinacion_id);
                 const inhab = inhabilitaciones.find((i) => i.integrante_id === miembro.id);
                 const esInhab = Boolean(inhab && !inhab.suplente_id);
 
                 return (
                   <option key={miembro.id} value={miembro.id} disabled={esInhab}>
-                    {c?.nombre_completo} ({coord?.nombre || "Comodín"}) {esInhab ? "[Inhabilitado]" : ""}
+                    {c?.nombre_completo || "Integrante"} ({coord?.nombre || "Comodín"}) {esInhab ? "[Inhabilitado]" : ""}
                   </option>
                 );
               })}

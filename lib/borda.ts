@@ -5,6 +5,7 @@ import {
   ComiteVoto,
   Nominacion,
   Pilar,
+  findColaborador,
 } from "./supabase";
 
 export const NUMERO_MONEDAS_A_REPARTIR = 4;
@@ -62,7 +63,7 @@ export function calcularComputoBorda(
   const resultadosMap = new Map<string, ResultadoNominacion>();
 
   nominaciones.forEach((nom) => {
-    const colab = colaboradores.find((c) => c.id === nom.nominado_id);
+    const colab = findColaborador(nom.nominado_id) || colaboradores.find((c) => c.id === nom.nominado_id);
     resultadosMap.set(nom.id, {
       nominacion: nom,
       colaborador: colab,
@@ -84,7 +85,7 @@ export function calcularComputoBorda(
       else if (voto.puntos === 1) item.votos1Pt += 1;
 
       const integrante = comite.find((c) => c.id === voto.integrante_id);
-      const colabIntegrante = colaboradores.find(
+      const colabIntegrante = findColaborador(integrante?.colaborador_id) || colaboradores.find(
         (c) => c.id === integrante?.colaborador_id
       );
       item.votosDetalle.push({

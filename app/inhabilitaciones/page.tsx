@@ -8,6 +8,7 @@ import {
   ComiteInhabilitacion,
   ComiteIntegrante,
   Nominacion,
+  findColaborador,
 } from "@/lib/supabase";
 import {
   getStoredComite,
@@ -48,9 +49,17 @@ export default function InhabilitacionesPage() {
     comiteData
       .filter((c) => c.es_titular && c.activo)
       .forEach((miembro) => {
-        const estaNominado = nomData.some(
-          (nom) => nom.nominado_id === miembro.colaborador_id && nom.estado === "aceptada"
-        );
+        const estaNominado = nomData.some((nom) => {
+          if (nom.estado !== "aceptada") return false;
+          if (nom.nominado_id === miembro.colaborador_id) return true;
+          const colabMiembro = findColaborador(miembro.colaborador_id);
+          const nominadoColab = findColaborador(nom.nominado_id);
+          return Boolean(
+            colabMiembro &&
+            nominadoColab &&
+            colabMiembro.nombre_completo.toLowerCase() === nominadoColab.nombre_completo.toLowerCase()
+          );
+        });
         const yaRegistrado = inhabData.some((i) => i.integrante_id === miembro.id);
 
         if (estaNominado && !yaRegistrado) {
@@ -173,15 +182,15 @@ export default function InhabilitacionesPage() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {titulares.map((miembro) => {
-            const colab = COLABORADORES_INICIALES.find((c) => c.id === miembro.colaborador_id);
+            const colab = findColaborador(miembro.colaborador_id);
             const coord = COORDINACIONES_INICIALES.find((c) => c.id === miembro.coordinacion_id);
             const estaInhabilitado = inhabilitaciones.some((i) => i.integrante_id === miembro.id);
             const inhabilitacion = inhabilitaciones.find((i) => i.integrante_id === miembro.id);
 
-            const suplenteColab = COLABORADORES_INICIALES.find((c) => {
-              const comodin = comite.find((item) => item.id === inhabilitacion?.suplente_id);
-              return c.id === comodin?.colaborador_id || c.id === inhabilitacion?.suplente_id;
-            });
+            const suplenteColab = findColaborador(
+              comite.find((item) => item.id === inhabilitacion?.suplente_id)?.colaborador_id ||
+              inhabilitacion?.suplente_id
+            );
 
             return (
               <div
