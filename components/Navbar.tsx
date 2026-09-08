@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { PlusCircle, Vote, User, LogOut } from "lucide-react";
+import { PlusCircle, Vote, User, LogOut, Award } from "lucide-react";
 import { CONVOCATORIA_ACTUAL } from "@/lib/supabase";
 import { getUsuario, clearUsuario, type Usuario } from "@/lib/session";
 import { getStoredNominaciones } from "@/lib/local-store";
@@ -88,6 +88,18 @@ export function Navbar() {
                 Votar
               </Link>
 
+              <Link
+                href="/certificado"
+                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                  pathname === "/certificado"
+                    ? "bg-[#B88F69]/15 text-[#8a6a4c] border border-[#B88F69]/40"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
+                }`}
+              >
+                <Award className="h-3.5 w-3.5 text-amber-600" />
+                Diplomas
+              </Link>
+
               {/* Chip de usuario */}
               <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5">
                 <User className="h-3.5 w-3.5 text-slate-400" />
@@ -149,6 +161,17 @@ export function Navbar() {
           >
             <Vote className="h-3.5 w-3.5" />
             Votar
+          </Link>
+          <Link
+            href="/certificado"
+            className={`flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap ${
+              pathname === "/certificado"
+                ? "bg-[#B88F69]/15 text-[#8a6a4c] border border-[#B88F69]/40"
+                : "text-slate-500 border border-slate-200"
+            }`}
+          >
+            <Award className="h-3.5 w-3.5 text-amber-600" />
+            Diplomas
           </Link>
         </div>
       )}

@@ -267,18 +267,27 @@ export default function DashboardMesaAltaPage() {
                     </div>
                   )}
 
-                  {/* Pie de tarjeta con autor y botón de edición */}
+                  {/* Pie de tarjeta con autor, diploma y botón de edición */}
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                     <span className="text-[11px] text-slate-500 truncate">
                       Postulado por: <strong className="text-slate-700 font-medium">{nominador?.nombre_completo || "Titular Mesa Alta"}</strong>
                     </span>
-                    <Link
-                      href={`/nominar?edit=${nom.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-[#254D6E] hover:border-[#254D6E]/40 hover:bg-slate-50 transition-all shadow-sm shrink-0"
-                    >
-                      <Pencil className="h-3 w-3 text-[#254D6E]" />
-                      Editar Postulación
-                    </Link>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link
+                        href={`/certificado?id=${nom.id}&tipo=nominacion`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/60 px-2.5 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 hover:border-amber-300 transition-all shadow-sm"
+                      >
+                        <Award className="h-3 w-3 text-amber-600" />
+                        Diploma
+                      </Link>
+                      <Link
+                        href={`/nominar?edit=${nom.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:text-[#254D6E] hover:border-[#254D6E]/40 hover:bg-slate-50 transition-all shadow-sm"
+                      >
+                        <Pencil className="h-3 w-3 text-[#254D6E]" />
+                        Editar
+                      </Link>
+                    </div>
                   </div>
                 </div>
               );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   COORDINACIONES_INICIALES,
   COLABORADORES_INICIALES,
@@ -272,21 +273,30 @@ export default function ResultadosPage() {
                     )}
                   </div>
 
-                  {/* Pilares */}
-                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100 relative z-10">
-                    {ganador.nominacion.pilares.map((pKey) => {
-                      const pilar = PILARES_INICIALES.find((p) => p.clave === pKey);
-                      return (
-                        <span
-                          key={pKey}
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${formatPilarBadgeColor(
-                            pKey
-                          )}`}
-                        >
-                          {pilar?.nombre || pKey}
-                        </span>
-                      );
-                    })}
+                  {/* Pilares & Diploma */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 relative z-10">
+                    <div className="flex flex-wrap gap-1.5">
+                      {ganador.nominacion.pilares.map((pKey) => {
+                        const pilar = PILARES_INICIALES.find((p) => p.clave === pKey);
+                        return (
+                          <span
+                            key={pKey}
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${formatPilarBadgeColor(
+                              pKey
+                            )}`}
+                          >
+                            {pilar?.nombre || pKey}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <Link
+                      href={`/certificado?id=${ganador.nominacion.id}&tipo=ganador`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#B88F69]/40 bg-[#B88F69]/10 px-2.5 py-1 text-xs font-bold text-[#8a6a4c] hover:bg-[#B88F69]/20 transition-all shadow-xs"
+                    >
+                      <Award className="h-3 w-3 text-[#B88F69]" />
+                      Diploma Oficial
+                    </Link>
                   </div>
                 </div>
               );
@@ -313,6 +323,7 @@ export default function ResultadosPage() {
                 <th className="px-5 py-3">Pilares</th>
                 <th className="px-5 py-3 text-center">Puntos Borda</th>
                 <th className="px-5 py-3">Detalle de Votos</th>
+                <th className="px-5 py-3 text-right">Diploma</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-600">
@@ -376,6 +387,15 @@ export default function ResultadosPage() {
                     ) : (
                       <span className="text-slate-400">Sin votos registrados</span>
                     )}
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <Link
+                      href={`/certificado?id=${res.nominacion.id}&tipo=${res.esGanadorMoneda ? 'ganador' : 'nominacion'}`}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-amber-800 bg-white hover:bg-amber-50/70 border border-slate-200 hover:border-amber-300 px-2.5 py-1.5 rounded-lg transition-all shadow-xs"
+                    >
+                      <Award className="h-3.5 w-3.5 text-amber-600" />
+                      Diploma
+                    </Link>
                   </td>
                 </tr>
               ))}
