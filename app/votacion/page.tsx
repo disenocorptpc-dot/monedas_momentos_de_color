@@ -99,12 +99,11 @@ export default function VotacionPage() {
     };
 
     const resolverVotanteId = (comiteList: ComiteIntegrante[], inhabList: ComiteInhabilitacion[], u: Usuario | null) => {
-      if (u && u.rol === "comite") {
+      if (u) {
         const miMiembro = comiteList.find((m) => {
           if (m.colaborador_id === u.id) return true;
           const colab = findColaborador(m.colaborador_id);
-          if (colab && colab.id === u.id) return true;
-          if (colab && colab.nombre_completo.toLowerCase() === u.nombre.toLowerCase()) return true;
+          if (colab && (colab.id === u.id || colab.nombre_completo.toLowerCase() === u.nombre.toLowerCase())) return true;
           return false;
         });
         if (miMiembro) return miMiembro.id;
@@ -238,30 +237,39 @@ export default function VotacionPage() {
   // PANTALLA ESPECIAL: miembro del comité que fue nominado
   // ══════════════════════════════════════════════════════════════
   if (usuarioNominado) {
+    const nominadoColab = findColaborador(usuarioNominado.nominado_id);
+    const coordNominada = COORDINACIONES_INICIALES.find(
+      (c) => c.id === usuarioNominado.coordinacion_id
+    );
+
     return (
-      <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="relative max-w-lg w-full overflow-hidden rounded-3xl border border-[#C9A86C]/40 bg-gradient-to-br from-[#FDFBF5] via-white to-[#fef9ef] p-8 sm:p-12 shadow-xl text-center">
-          {/* Resplandor de fondo */}
-          <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-[#C9A86C]/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-[#254D6E]/8 blur-3xl" />
+      <div className="flex min-h-[70vh] items-center justify-center px-4 py-8">
+        <div className="w-full max-w-xl text-center">
+          {/* Card institucional con orla dorada */}
+          <div className="relative overflow-hidden rounded-3xl border-2 border-[#C9A86C]/50 bg-gradient-to-b from-[#FAF8F5] via-white to-[#F7F4EE] p-10 shadow-xl">
+            {/* Resplandor superior */}
+            <div className="absolute -top-20 left-1/2 -translate-x-1/2 h-40 w-80 rounded-full bg-[#C9A86C]/15 blur-3xl" />
 
-          {/* Ícono */}
-          <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#f0d9a8] via-[#D4A84B] to-[#8B6914] shadow-lg" />
-            <div className="absolute inset-[3px] rounded-full bg-gradient-to-tl from-[#8B6914] via-[#C9A86C] to-[#f0d9a8]" />
-            <div className="absolute inset-[6px] rounded-full bg-white flex items-center justify-center">
-              <Star className="h-7 w-7 text-[#8B6914]" fill="#8B6914" />
+            {/* Medallón de Honor */}
+            <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#1C3A52] to-[#254D6E] shadow-lg shadow-[#1C3A52]/20 ring-4 ring-[#C9A86C]/30">
+              <PartyPopper className="h-9 w-9 text-[#C9A86C]" />
+              <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#C9A86C] text-[#1C3A52]">
+                <Star className="h-3.5 w-3.5 fill-current" />
+              </span>
             </div>
-          </div>
 
-          {/* Texto */}
-          <div className="relative space-y-3">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#C9A86C]">
-              {CONVOCATORIA_ACTUAL.ciclo} · The Palace Company
+            {/* Encabezado ceremonial */}
+            <p className="text-[11px] font-semibold tracking-[0.25em] text-[#C9A86C] uppercase mb-1">
+              Reconocimiento Institucional
             </p>
-            <h1 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#1C3A52] leading-tight">
-              ¡Felicidades, {nombreUsuario.split(" ")[0]}!
+            <h1 className="font-serif text-3xl font-bold text-[#1C3A52] sm:text-4xl mb-2">
+              ¡Felicidades, {nombreUsuario || nominadoColab?.nombre_completo || "Colaborador"}!
             </h1>
+            <p className="text-xs font-semibold text-[#4A8BB5] tracking-wide uppercase mb-6">
+              {coordNominada?.nombre || "Dirección de Diseño y Experiencia"}
+            </p>
+
+            {/* Mensaje de protocolo */}
             <p className="text-sm text-slate-600 leading-relaxed">
               Has sido <strong className="text-[#1C3A52]">postulada como candidata</strong> en este ciclo de deliberación de Monedas · Momentos de Color.
             </p>
@@ -285,10 +293,10 @@ export default function VotacionPage() {
       <div className="space-y-2">
         <div className="inline-flex items-center gap-2 rounded-full border border-[#2A7D6F]/30 bg-[#2A7D6F]/10 px-3 py-1 text-xs font-semibold text-[#2A7D6F]">
           <Vote className="h-3.5 w-3.5" />
-          Mesa Comité · Cámara de Votación Borda (4-3-2-1)
+          Plenaria de Votación (Mesa Alta + Comité) · Borda (4-3-2-1)
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Votación del Comité ({CONVOCATORIA_ACTUAL.ciclo})
+          Votación Plenaria ({CONVOCATORIA_ACTUAL.ciclo})
         </h1>
         <p className="text-xs text-slate-500 sm:text-sm">
           Asigna <strong className="text-slate-700">4 Pts</strong> (🥇), <strong className="text-slate-700">3 Pts</strong> (🥈), <strong className="text-slate-700">2 Pts</strong> (🥉) y <strong className="text-slate-700">1 Pt</strong> (🎖️) a cuatro nominados distintos para cubrir las 4 Monedas de Color del ciclo.
@@ -297,22 +305,25 @@ export default function VotacionPage() {
 
       {/* Identidad del Votante */}
       <div className="panel-card rounded-xl p-6 border border-slate-200 space-y-4">
-        {/* Caso A: Usuario logueado es del Comité (su voto es propio y directo) */}
-        {usuarioLogueado && usuarioLogueado.rol === "comite" ? (
+        {usuarioLogueado ? (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#254D6E]/10 text-[#254D6E] font-bold text-sm border border-[#254D6E]/20">
                 {usuarioLogueado.nombre.slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#2A7D6F] bg-[#2A7D6F]/10 px-2 py-0.5 rounded-full">
-                  Comité Evaluador
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                  usuarioLogueado.rol === "mesa_alta"
+                    ? "bg-[#B88F69]/15 text-[#8a6a4c] border border-[#B88F69]/30"
+                    : "bg-[#2A7D6F]/10 text-[#2A7D6F] border border-[#2A7D6F]/30"
+                }`}>
+                  {usuarioLogueado.rol === "mesa_alta" ? "Mesa Alta · Votante Oficial" : "Comité Evaluador · Votante Oficial"}
                 </span>
                 <h2 className="text-base font-bold text-slate-900 mt-0.5">
                   {usuarioLogueado.nombre}
                 </h2>
                 <p className="text-xs text-slate-500">
-                  {votanteCoord?.nombre || "Coordinación"} · Boleta Oficial
+                  {votanteCoord?.nombre || "Participante"} · Boleta Oficial
                 </p>
               </div>
             </div>
@@ -361,86 +372,72 @@ export default function VotacionPage() {
             </div>
           </div>
         ) : (
-          /* Caso B: Mesa Alta o sesión sin comité (modo vista o simulación) */
-          <div className="space-y-4">
-            {usuarioLogueado && usuarioLogueado.rol === "mesa_alta" && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-4 flex items-start gap-3 text-xs text-amber-900">
-                <User className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-bold">Sesión activa: {usuarioLogueado.nombre} (Mesa Alta)</p>
-                  <p className="text-amber-800 leading-relaxed">
-                    Tu rol oficial como titular de Mesa Alta es <strong>nominar</strong>. La votación corresponde exclusivamente a los 6 miembros del <strong>Comité Evaluador</strong>. Desde esta pantalla puedes consultar las candidaturas o simular la emisión de votos seleccionando a un integrante del comité:
-                  </p>
-                </div>
-              </div>
-            )}
+          /* Caso sin sesión activa: selector manual de votante */
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                Seleccionar Votante (Mesa Alta o Comité):
+              </label>
+              <select
+                value={votanteActualId}
+                onChange={(e) => setVotanteActualId(e.target.value)}
+                className="w-full sm:w-80 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]/20"
+              >
+                {comite.map((miembro) => {
+                  const c = findColaborador(miembro.colaborador_id);
+                  const coord = COORDINACIONES_INICIALES.find((co) => co.id === miembro.coordinacion_id);
+                  const inhab = inhabilitaciones.find((i) => i.integrante_id === miembro.id);
+                  const esInhab = Boolean(inhab && !inhab.suplente_id);
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  {usuarioLogueado?.rol === "mesa_alta" ? "Simular boleta como miembro del comité:" : "Seleccionar Integrante del Comité:"}
-                </label>
-                <select
-                  value={votanteActualId}
-                  onChange={(e) => setVotanteActualId(e.target.value)}
-                  className="w-full sm:w-80 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]/20"
+                  return (
+                    <option key={miembro.id} value={miembro.id} disabled={esInhab}>
+                      {c?.nombre_completo || "Integrante"} ({coord?.nombre || "Coordinación"}) {esInhab ? "[Inhabilitado]" : ""}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Resumen de boleta actual */}
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 flex items-center gap-3">
+              <span className="text-xs font-semibold text-slate-500">Puntos Asignados:</span>
+              <div className="flex gap-2">
+                <span
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                    Object.values(puntosAsignados).includes(4)
+                      ? "bg-[#B88F69] text-white shadow-xs"
+                      : "bg-white text-slate-400 border border-slate-200"
+                  }`}
                 >
-                  {comite.map((miembro) => {
-                    const c = findColaborador(miembro.colaborador_id);
-                    const coord = COORDINACIONES_INICIALES.find((co) => co.id === miembro.coordinacion_id);
-                    const inhab = inhabilitaciones.find((i) => i.integrante_id === miembro.id);
-                    const esInhab = Boolean(inhab && !inhab.suplente_id);
-
-                    return (
-                      <option key={miembro.id} value={miembro.id} disabled={esInhab}>
-                        {c?.nombre_completo || "Integrante"} ({coord?.nombre || "Comité"}) {esInhab ? "[Inhabilitado]" : ""}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              {/* Resumen de boleta actual */}
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 flex items-center gap-3">
-                <span className="text-xs font-semibold text-slate-500">Puntos Asignados:</span>
-                <div className="flex gap-2">
-                  <span
-                    className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                      Object.values(puntosAsignados).includes(4)
-                        ? "bg-[#B88F69] text-white shadow-xs"
-                        : "bg-white text-slate-400 border border-slate-200"
-                    }`}
-                  >
-                    4 pts {Object.values(puntosAsignados).includes(4) ? "✓" : "—"}
-                  </span>
-                  <span
-                    className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                      Object.values(puntosAsignados).includes(3)
-                        ? "bg-[#254D6E] text-white shadow-xs"
-                        : "bg-white text-slate-400 border border-slate-200"
-                    }`}
-                  >
-                    3 pts {Object.values(puntosAsignados).includes(3) ? "✓" : "—"}
-                  </span>
-                  <span
-                    className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                      Object.values(puntosAsignados).includes(2)
-                        ? "bg-[#4A8BB5] text-white shadow-xs"
-                        : "bg-white text-slate-400 border border-slate-200"
-                    }`}
-                  >
-                    2 pts {Object.values(puntosAsignados).includes(2) ? "✓" : "—"}
-                  </span>
-                  <span
-                    className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                      Object.values(puntosAsignados).includes(1)
-                        ? "bg-[#2A7D6F] text-white shadow-xs"
-                        : "bg-white text-slate-400 border border-slate-200"
-                    }`}
-                  >
-                    1 pt {Object.values(puntosAsignados).includes(1) ? "✓" : "—"}
-                  </span>
-                </div>
+                  4 pts {Object.values(puntosAsignados).includes(4) ? "✓" : "—"}
+                </span>
+                <span
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                    Object.values(puntosAsignados).includes(3)
+                      ? "bg-[#254D6E] text-white shadow-xs"
+                      : "bg-white text-slate-400 border border-slate-200"
+                  }`}
+                >
+                  3 pts {Object.values(puntosAsignados).includes(3) ? "✓" : "—"}
+                </span>
+                <span
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                    Object.values(puntosAsignados).includes(2)
+                      ? "bg-[#4A8BB5] text-white shadow-xs"
+                      : "bg-white text-slate-400 border border-slate-200"
+                  }`}
+                >
+                  2 pts {Object.values(puntosAsignados).includes(2) ? "✓" : "—"}
+                </span>
+                <span
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                    Object.values(puntosAsignados).includes(1)
+                      ? "bg-[#2A7D6F] text-white shadow-xs"
+                      : "bg-white text-slate-400 border border-slate-200"
+                  }`}
+                >
+                  1 pt {Object.values(puntosAsignados).includes(1) ? "✓" : "—"}
+                </span>
               </div>
             </div>
           </div>

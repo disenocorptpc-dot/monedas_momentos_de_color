@@ -17,7 +17,7 @@ const CONV_ID = CONVOCATORIA_ACTUAL.id;
 
 export const STORAGE_KEYS = {
   NOMINACIONES: "mmc_nominaciones_v2",
-  COMITE: "mmc_comite_v1",
+  COMITE: "mmc_comite_v2",
   INHABILITACIONES: "mmc_inhabilitaciones_v1",
   VOTOS: "mmc_votos_v1",
   CONVOCATORIA: "mmc_convocatoria_v1",
@@ -184,7 +184,12 @@ export function getStoredComite(): ComiteIntegrante[] {
   if (typeof window === "undefined") return COMITE_INICIAL;
   const data = localStorage.getItem(STORAGE_KEYS.COMITE);
   if (data) {
-    try { return JSON.parse(data); } catch { /* noop */ }
+    try {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length >= COMITE_INICIAL.length) {
+        return parsed;
+      }
+    } catch { /* noop */ }
   }
   localStorage.setItem(STORAGE_KEYS.COMITE, JSON.stringify(COMITE_INICIAL));
   return COMITE_INICIAL;

@@ -210,17 +210,23 @@ export const MESA_ALTA_INICIALES: Colaborador[] = [
   { id: "ma-6", nombre_completo: "Karen Muñoz",          coordinacion_id: "c6", titular_mesa_alta: "Karen Muñoz",          activo: true },
 ];
 
-// ─── COMITÉ EVALUADOR (solo votan) ───────────────────────────────────────────
+// ─── PLENARIA DE VOTACIÓN (Mesa Alta + Comité Evaluador) ─────────────────────
 export const COMITE_INICIAL: ComiteIntegrante[] = [
+  // ── Mesa Alta (Coordinadores con voto) ──
+  { id: "com-ma-1", colaborador_id: "ma-1", coordinacion_id: "c1", es_titular: true, es_comodin: false, activo: true }, // Eva Noya
+  { id: "com-ma-2", colaborador_id: "ma-2", coordinacion_id: "c2", es_titular: true, es_comodin: false, activo: true }, // Rufino Santa Rosa
+  { id: "com-ma-3", colaborador_id: "ma-3", coordinacion_id: "c3", es_titular: true, es_comodin: false, activo: true }, // Pamela Castillo
+  { id: "com-ma-4", colaborador_id: "ma-4", coordinacion_id: "c4", es_titular: true, es_comodin: false, activo: true }, // Maria Leal
+  { id: "com-ma-5", colaborador_id: "ma-5", coordinacion_id: "c5", es_titular: true, es_comodin: false, activo: true }, // Miguel Angel Barquín
+  { id: "com-ma-6", colaborador_id: "ma-6", coordinacion_id: "c6", es_titular: true, es_comodin: false, activo: true }, // Karen Muñoz
+
+  // ── Comité Evaluador (Votantes) ──
   { id: "com-1", colaborador_id: "ev-1", coordinacion_id: "c1", es_titular: true, es_comodin: false, activo: true }, // Jonathan Aguilar - Fotografía
   { id: "com-2", colaborador_id: "ev-2", coordinacion_id: "c5", es_titular: true, es_comodin: false, activo: true }, // Nayeli Tepepa - Taller
   { id: "com-3", colaborador_id: "ev-3", coordinacion_id: "c2", es_titular: true, es_comodin: false, activo: true }, // Homero Hernández - Diseño 3D
   { id: "com-4", colaborador_id: "ev-4", coordinacion_id: "c6", es_titular: true, es_comodin: false, activo: true }, // Maria Fernanda Aguilar - Proyectos Especiales
   { id: "com-5", colaborador_id: "ev-5", coordinacion_id: "c3", es_titular: true, es_comodin: false, activo: true }, // Paola Carmona - Arte y Branding
   { id: "com-6", colaborador_id: "ev-6", coordinacion_id: "c4", es_titular: true, es_comodin: false, activo: true }, // Cristina Coba - Operaciones
-  // Comodines
-  { id: "com-cmd-1", colaborador_id: "cmd-1", coordinacion_id: null, es_titular: false, es_comodin: true, activo: true },
-  { id: "com-cmd-2", colaborador_id: "cmd-2", coordinacion_id: null, es_titular: false, es_comodin: true, activo: true },
 ];
 
 // Evaluadores del comité como entidades propias (para lookup por nombre)
