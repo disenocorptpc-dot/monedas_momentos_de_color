@@ -14,13 +14,14 @@ export interface ResultadoNominacion {
   nominacion: Nominacion;
   colaborador?: Colaborador;
   puntosTotales: number;
+  votos4Pts: number;
   votos3Pts: number;
   votos2Pts: number;
   votos1Pt: number;
   votosDetalle: {
     integranteId: string;
     votoPor: string;
-    puntos: 1 | 2 | 3;
+    puntos: 1 | 2 | 3 | 4;
   }[];
   posicion?: number;
   esGanadorMoneda?: boolean;
@@ -43,7 +44,7 @@ export interface ComputoCiclo {
 }
 
 /**
- * Calcula el cómputo final de la votación Borda (3-2-1) y asigna las 4 Monedas de Color
+ * Calcula el cómputo final de la votación Borda (4-3-2-1) y asigna las 4 Monedas de Color
  */
 export function calcularComputoBorda(
   nominaciones: Nominacion[],
@@ -68,6 +69,7 @@ export function calcularComputoBorda(
       nominacion: nom,
       colaborador: colab,
       puntosTotales: 0,
+      votos4Pts: 0,
       votos3Pts: 0,
       votos2Pts: 0,
       votos1Pt: 0,
@@ -80,7 +82,8 @@ export function calcularComputoBorda(
     const item = resultadosMap.get(voto.nominacion_id);
     if (item) {
       item.puntosTotales += voto.puntos;
-      if (voto.puntos === 3) item.votos3Pts += 1;
+      if (voto.puntos === 4) item.votos4Pts += 1;
+      else if (voto.puntos === 3) item.votos3Pts += 1;
       else if (voto.puntos === 2) item.votos2Pts += 1;
       else if (voto.puntos === 1) item.votos1Pt += 1;
 
@@ -91,19 +94,23 @@ export function calcularComputoBorda(
       item.votosDetalle.push({
         integranteId: voto.integrante_id,
         votoPor: colabIntegrante?.nombre_completo || "Integrante Comité",
-        puntos: voto.puntos,
+        puntos: voto.puntos as 1 | 2 | 3 | 4,
       });
     }
   });
 
   // Ordenar por puntos totales descendente con desempate Borda oficial:
   // 1. Puntos totales Borda
-  // 2. Mayor cantidad de votos de 3 puntos (1er lugar en boletas)
-  // 3. Mayor cantidad de votos de 2 puntos (2do lugar en boletas)
+  // 2. Mayor cantidad de votos de 4 puntos (1er lugar en boletas)
+  // 3. Mayor cantidad de votos de 3 puntos (2do lugar en boletas)
+  // 4. Mayor cantidad de votos de 2 puntos (3er lugar en boletas)
   const resultadosOrdenados = Array.from(resultadosMap.values()).sort(
     (a, b) => {
       if (b.puntosTotales !== a.puntosTotales) {
         return b.puntosTotales - a.puntosTotales;
+      }
+      if (b.votos4Pts !== a.votos4Pts) {
+        return b.votos4Pts - a.votos4Pts;
       }
       if (b.votos3Pts !== a.votos3Pts) {
         return b.votos3Pts - a.votos3Pts;
@@ -142,7 +149,7 @@ export function calcularComputoBorda(
     votantesValidos,
     tieneQuorum,
     totalVotosEmitidos: votos.length,
-    maxPuntosPosibles: votantesValidos * 6, // 3 + 2 + 1 = 6 por votante
+    maxPuntosPosibles: votantesValidos * 10, // 4 + 3 + 2 + 1 = 10 por votante
     monedasDisponibles: NUMERO_MONEDAS_A_REPARTIR,
     monedasAsignadas: tieneQuorum
       ? resultadosOrdenados.filter((r) => r.esGanadorMoneda).length
@@ -153,22 +160,22 @@ export function calcularComputoBorda(
 }
 
 /**
- * Valida que una boleta de votación Borda contenga exactamente 3 puntos, 2 puntos y 1 punto
- * para 3 nominaciones distintas
+ * Valida que una boleta de votación Borda contenga exactamente 4 puntos, 3 puntos, 2 puntos y 1 punto
+ * para 4 nominaciones distintas
  */
-export function validarBoletaBorda(votos: { nominacionId: string; puntos: 1 | 2 | 3 }[]): {
+export function validarBoletaBorda(votos: { nominacionId: string; puntos: 1 | 2 | 3 | 4 }[]): {
   valido: boolean;
   mensaje?: string;
 } {
-  if (votos.length !== 3) {
+  if (votos.length !== 4) {
     return {
       valido: false,
-      mensaje: "Debes asignar exactamente 3 votos: 1er lugar (3 pts), 2do lugar (2 pts) y 3er lugar (1 pt).",
+      mensaje: "Debes asignar exactamente 4 votos: 1er lugar (4 pts), 2do lugar (3 pts), 3er lugar (2 pts) y 4to lugar (1 pt).",
     };
   }
 
   const ids = new Set(votos.map((v) => v.nominacionId));
-  if (ids.size !== 3) {
+  if (ids.size !== 4) {
     return {
       valido: false,
       mensaje: "No puedes asignar más de una puntuación a la misma nominación.",
@@ -176,12 +183,13 @@ export function validarBoletaBorda(votos: { nominacionId: string; puntos: 1 | 2 
   }
 
   const puntosSet = new Set(votos.map((v) => v.puntos));
-  if (!puntosSet.has(1) || !puntosSet.has(2) || !puntosSet.has(3)) {
+  if (!puntosSet.has(1) || !puntosSet.has(2) || !puntosSet.has(3) || !puntosSet.has(4)) {
     return {
       valido: false,
-      mensaje: "Debes asignar una puntuación de 3, una de 2 y una de 1 punto sin repetir.",
+      mensaje: "Debes asignar una puntuación de 4, 3, 2 y 1 punto sin repetir.",
     };
   }
 
   return { valido: true };
 }
+

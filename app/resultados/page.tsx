@@ -135,7 +135,7 @@ export default function ResultadosPage() {
             Resultados — {CONVOCATORIA_ACTUAL.ciclo}
           </h1>
           <p className="text-xs text-slate-500 sm:text-sm">
-            Cómputo por método Borda (3-2-1) asignando las <strong>4 Monedas de Color</strong> del ciclo.
+            Cómputo por método Borda (4-3-2-1) asignando las <strong>4 Monedas de Color</strong> del ciclo.
           </p>
         </div>
 
@@ -246,6 +246,7 @@ export default function ResultadosPage() {
                           {ganador.puntosTotales} pts
                         </span>
                         <p className="text-[10px] text-slate-400">
+                          {ganador.votos4Pts > 0 ? `${ganador.votos4Pts}x(4pts) ` : ""}
                           {ganador.votos3Pts > 0 ? `${ganador.votos3Pts}x(3pts) ` : ""}
                           {ganador.votos2Pts > 0 ? `${ganador.votos2Pts}x(2pts) ` : ""}
                           {ganador.votos1Pt > 0 ? `${ganador.votos1Pt}x(1pt)` : ""}
@@ -311,7 +312,7 @@ export default function ResultadosPage() {
           <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
             Tabla General de Posiciones
           </h3>
-          <span className="text-xs text-slate-500">Método Borda 3-2-1 · Desempate Oficial</span>
+          <span className="text-xs text-slate-500">Método Borda 4-3-2-1 · Desempate Oficial</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -367,6 +368,7 @@ export default function ResultadosPage() {
                       {res.puntosTotales} pts
                     </div>
                     <div className="text-[10px] text-slate-400">
+                      {res.votos4Pts > 0 ? `${res.votos4Pts}x(4pts) ` : ""}
                       {res.votos3Pts > 0 ? `${res.votos3Pts}x(3pts) ` : ""}
                       {res.votos2Pts > 0 ? `${res.votos2Pts}x(2pts) ` : ""}
                       {res.votos1Pt > 0 ? `${res.votos1Pt}x(1pt)` : ""}

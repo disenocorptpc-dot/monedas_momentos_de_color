@@ -146,7 +146,7 @@ export default function HomePage() {
                   <Vote className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">Emitir Voto (Borda 3-2-1)</p>
+                  <p className="text-sm font-semibold text-slate-900">Emitir Voto (Borda 4-3-2-1)</p>
                   <p className="text-xs text-slate-500">
                     {hayNominados ? "Cámara de votación abierta" : "Esperando nominaciones del ciclo"}
                   </p>

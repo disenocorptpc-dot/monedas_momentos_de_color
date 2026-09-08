@@ -78,7 +78,7 @@ export interface ComiteVoto {
   convocatoria_id: string;
   integrante_id: string;
   nominacion_id: string;
-  puntos: 1 | 2 | 3;
+  puntos: 1 | 2 | 3 | 4;
   created_at?: string;
 }
 

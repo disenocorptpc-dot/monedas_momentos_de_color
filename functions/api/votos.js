@@ -24,6 +24,25 @@ export async function onRequestGet({ request, env }) {
   }
 }
 
+let migrated = false;
+async function ensureMigration(db) {
+  if (migrated) return;
+  try {
+    const tableInfo = await db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='comite_votos'").first();
+    if (tableInfo && tableInfo.sql && !tableInfo.sql.includes('4')) {
+      await db.batch([
+        db.prepare("CREATE TABLE IF NOT EXISTS comite_votos_v2 (id TEXT PRIMARY KEY, convocatoria_id TEXT NOT NULL, integrante_id TEXT NOT NULL, nominacion_id TEXT NOT NULL, puntos INTEGER NOT NULL CHECK (puntos IN (1, 2, 3, 4)), created_at TEXT DEFAULT (datetime('now')), UNIQUE (convocatoria_id, integrante_id, nominacion_id))"),
+        db.prepare("INSERT OR IGNORE INTO comite_votos_v2 SELECT * FROM comite_votos"),
+        db.prepare("DROP TABLE comite_votos"),
+        db.prepare("ALTER TABLE comite_votos_v2 RENAME TO comite_votos")
+      ]);
+    }
+    migrated = true;
+  } catch (e) {
+    console.warn("Migration notice:", e);
+  }
+}
+
 export async function onRequestPost({ request, env }) {
   try {
     if (!env.DB) {
@@ -32,6 +51,8 @@ export async function onRequestPost({ request, env }) {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     }
+
+    await ensureMigration(env.DB);
 
     const body = await request.json();
     const votos = body.votos || [];

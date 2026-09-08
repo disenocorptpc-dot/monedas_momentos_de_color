@@ -216,7 +216,7 @@ export function generarReporteClaudePrompt(
   const lineas = [
     `# AUDITORÍA DE ÁRBITRO — PROGRAMA MONEDAS · MOMENTOS DE COLOR`,
     `The Palace Company · Ciclo: ${ciclo}`,
-    `Regla Oficial: Se entregan 4 Monedas de Color por ciclo (Top 4 del Cómputo Borda 3-2-1).`,
+    `Regla Oficial: Se entregan 4 Monedas de Color por ciclo (Top 4 del Cómputo Borda 4-3-2-1).`,
     `Fecha de exportación: ${new Date().toLocaleDateString()}`,
     ``,
     `Instrucción para el LLM / Claude:`,
@@ -226,7 +226,7 @@ export function generarReporteClaudePrompt(
 
   if (computo && computo.resultados.length > 0) {
     lineas.push(`---`);
-    lineas.push(`## RESUMEN DEL CÓMPUTO OFICIAL BORDA (3-2-1):`);
+    lineas.push(`## RESUMEN DEL CÓMPUTO OFICIAL BORDA (4-3-2-1):`);
     lineas.push(`- Votantes válidos: ${computo.votantesValidos} (Quórum: ${computo.tieneQuorum ? "CUMPLIDO" : "NO CUMPLIDO"})`);
     lineas.push(`- Total votos emitidos: ${computo.totalVotosEmitidos}`);
     lineas.push(`- Monedas asignadas: ${computo.monedasAsignadas} de 4`);
@@ -236,7 +236,7 @@ export function generarReporteClaudePrompt(
     const ganadores = computo.resultados.filter((r) => r.esGanadorMoneda);
     ganadores.forEach((g) => {
       lineas.push(
-        `#${g.posicion} | ${g.colaborador?.nombre_completo || "Colaborador"} — ${g.puntosTotales} pts Borda (${g.votos3Pts} votos de 3 pts, ${g.votos2Pts} votos de 2 pts)`
+        `#${g.posicion} | ${g.colaborador?.nombre_completo || "Colaborador"} — ${g.puntosTotales} pts Borda (${g.votos4Pts} votos de 4 pts, ${g.votos3Pts} votos de 3 pts, ${g.votos2Pts} votos de 2 pts)`
       );
       lineas.push(`  - Pilares: ${g.nominacion.pilares?.join(", ")}`);
       lineas.push(`  - Hecho: "${g.nominacion.descripcion_hecho}"`);

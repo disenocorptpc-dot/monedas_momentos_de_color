@@ -46,7 +46,7 @@ export default function VotacionPage() {
   const [votosRegistrados, setVotosRegistrados] = useState<ComiteVoto[]>([]);
 
   const [votanteActualId, setVotanteActualId] = useState("");
-  const [puntosAsignados, setPuntosAsignados] = useState<Record<string, 1 | 2 | 3>>({});
+  const [puntosAsignados, setPuntosAsignados] = useState<Record<string, 1 | 2 | 3 | 4>>({});
   const [errorMsg, setErrorMsg] = useState("");
   const [exitoMsg, setExitoMsg] = useState("");
   const [guardandoVotos, setGuardandoVotos] = useState(false);
@@ -138,7 +138,7 @@ export default function VotacionPage() {
       (v) => v.integrante_id === votanteActualId && v.convocatoria_id === CONVOCATORIA_ACTUAL.id
     );
 
-    const map: Record<string, 1 | 2 | 3> = {};
+    const map: Record<string, 1 | 2 | 3 | 4> = {};
     votosPrevios.forEach((v) => {
       map[v.nominacion_id] = v.puntos;
     });
@@ -162,8 +162,8 @@ export default function VotacionPage() {
     (i) => i.integrante_id === votanteActualId && !i.suplente_id
   );
 
-  // Manejar asignación de puntos (3, 2, 1)
-  const handleAsignarPuntos = (nominacionId: string, puntos: 1 | 2 | 3) => {
+  // Manejar asignación de puntos (4, 3, 2, 1)
+  const handleAsignarPuntos = (nominacionId: string, puntos: 1 | 2 | 3 | 4) => {
     setErrorMsg("");
     setExitoMsg("");
 
@@ -215,7 +215,7 @@ export default function VotacionPage() {
       await pushVotos(nuevosVotos);
       const updated = saveStoredVotos(nuevosVotos);
       setVotosRegistrados(updated);
-      setExitoMsg("¡Votos registrados exitosamente con método Borda (3-2-1) en el sistema central!");
+      setExitoMsg("¡Votos registrados exitosamente con método Borda (4-3-2-1) en el sistema central!");
     } catch {
       setErrorMsg("Ocurrió un problema al enviar los votos a la nube. Intenta de nuevo.");
     } finally {
@@ -274,13 +274,13 @@ export default function VotacionPage() {
       <div className="space-y-2">
         <div className="inline-flex items-center gap-2 rounded-full border border-[#2A7D6F]/30 bg-[#2A7D6F]/10 px-3 py-1 text-xs font-semibold text-[#2A7D6F]">
           <Vote className="h-3.5 w-3.5" />
-          Mesa Comité · Cámara de Votación Borda (3-2-1)
+          Mesa Comité · Cámara de Votación Borda (4-3-2-1)
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
           Votación del Comité ({CONVOCATORIA_ACTUAL.ciclo})
         </h1>
         <p className="text-xs text-slate-500 sm:text-sm">
-          Asigna <strong className="text-slate-700">3 puntos</strong> a tu 1er lugar, <strong className="text-slate-700">2 puntos</strong> al 2do lugar y <strong className="text-slate-700">1 punto</strong> al 3er lugar. Cada puntuación debe asignarse a un nominado distinto.
+          Asigna <strong className="text-slate-700">4 puntos</strong> a tu 1er lugar (🥇), <strong className="text-slate-700">3 puntos</strong> al 2do lugar (🥈), <strong className="text-slate-700">2 puntos</strong> al 3er lugar (🥉) y <strong className="text-slate-700">1 punto</strong> al 4to lugar (🎖️). Cada puntuación debe asignarse a un nominado distinto para cubrir las 4 Monedas de Color.
         </p>
       </div>
 
@@ -289,7 +289,7 @@ export default function VotacionPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
-              Seleccionar Integrante del Comité o Comodín Activo:
+              Seleccionar Integrante del Comité:
             </label>
             <select
               value={votanteActualId}
@@ -304,7 +304,7 @@ export default function VotacionPage() {
 
                 return (
                   <option key={miembro.id} value={miembro.id} disabled={esInhab}>
-                    {c?.nombre_completo || "Integrante"} ({coord?.nombre || "Comodín"}) {esInhab ? "[Inhabilitado]" : ""}
+                    {c?.nombre_completo || "Integrante"} ({coord?.nombre || "Comité"}) {esInhab ? "[Inhabilitado]" : ""}
                   </option>
                 );
               })}
@@ -317,8 +317,17 @@ export default function VotacionPage() {
             <div className="flex gap-2">
               <span
                 className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                  Object.values(puntosAsignados).includes(4)
+                    ? "bg-[#B88F69] text-white shadow-xs"
+                    : "bg-white text-slate-400 border border-slate-200"
+                }`}
+              >
+                4 pts {Object.values(puntosAsignados).includes(4) ? "✓" : "—"}
+              </span>
+              <span
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
                   Object.values(puntosAsignados).includes(3)
-                    ? "bg-[#254D6E] text-white"
+                    ? "bg-[#254D6E] text-white shadow-xs"
                     : "bg-white text-slate-400 border border-slate-200"
                 }`}
               >
@@ -327,7 +336,7 @@ export default function VotacionPage() {
               <span
                 className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
                   Object.values(puntosAsignados).includes(2)
-                    ? "bg-[#4A8BB5] text-white"
+                    ? "bg-[#4A8BB5] text-white shadow-xs"
                     : "bg-white text-slate-400 border border-slate-200"
                 }`}
               >
@@ -336,7 +345,7 @@ export default function VotacionPage() {
               <span
                 className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
                   Object.values(puntosAsignados).includes(1)
-                    ? "bg-[#B88F69] text-white"
+                    ? "bg-[#2A7D6F] text-white shadow-xs"
                     : "bg-white text-slate-400 border border-slate-200"
                 }`}
               >
@@ -374,12 +383,14 @@ export default function VotacionPage() {
               <div
                 key={nom.id}
                 className={`content-card rounded-xl p-6 border transition-all ${
-                  puntosVotados === 3
+                  puntosVotados === 4
+                    ? "border-[#B88F69]/60 bg-[#B88F69]/10 shadow-xs"
+                    : puntosVotados === 3
                     ? "border-[#254D6E]/40 bg-[#254D6E]/5"
                     : puntosVotados === 2
                     ? "border-[#4A8BB5]/40 bg-[#4A8BB5]/5"
                     : puntosVotados === 1
-                    ? "border-[#B88F69]/40 bg-[#B88F69]/5"
+                    ? "border-[#2A7D6F]/40 bg-[#2A7D6F]/5"
                     : "border-slate-200"
                 }`}
               >
@@ -399,14 +410,17 @@ export default function VotacionPage() {
                       {puntosVotados && (
                         <span
                           className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
-                            puntosVotados === 3
+                            puntosVotados === 4
+                              ? "bg-[#B88F69] text-white"
+                              : puntosVotados === 3
                               ? "bg-[#254D6E] text-white"
                               : puntosVotados === 2
                               ? "bg-[#4A8BB5] text-white"
-                              : "bg-[#B88F69] text-white"
+                              : "bg-[#2A7D6F] text-white"
                           }`}
                         >
-                          <Award className="h-3.5 w-3.5" /> {puntosVotados} PUNTOS ASIGNADOS
+                          <Award className="h-3.5 w-3.5" />
+                          {puntosVotados === 4 ? "🥇 4 PUNTOS (1er Lugar)" : puntosVotados === 3 ? "🥈 3 PUNTOS (2do Lugar)" : puntosVotados === 2 ? "🥉 2 PUNTOS (3er Lugar)" : "🎖️ 1 PUNTO (4to Lugar)"}
                         </span>
                       )}
                     </div>
@@ -455,42 +469,54 @@ export default function VotacionPage() {
                     )}
                   </div>
 
-                  {/* Asignador de Puntos Borda */}
+                  {/* Asignador de Puntos Borda (4-3-2-1) */}
                   <div className="flex md:flex-col gap-2 shrink-0 border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-4">
                     <button
                       type="button"
+                      onClick={() => handleAsignarPuntos(nom.id, 4)}
+                      className={`flex-1 md:w-44 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                        puntosVotados === 4
+                          ? "bg-[#B88F69] text-white shadow-sm"
+                          : "bg-white border border-slate-200 text-slate-600 hover:border-[#B88F69]/60 hover:text-[#B88F69]"
+                      }`}
+                    >
+                      🥇 4 Pts · 1er Lugar
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => handleAsignarPuntos(nom.id, 3)}
-                      className={`flex-1 md:w-40 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex-1 md:w-44 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
                         puntosVotados === 3
                           ? "bg-[#254D6E] text-white shadow-sm"
                           : "bg-white border border-slate-200 text-slate-600 hover:border-[#254D6E]/40 hover:text-[#254D6E]"
                       }`}
                     >
-                      3 Pts · 1er Lugar
+                      🥈 3 Pts · 2do Lugar
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleAsignarPuntos(nom.id, 2)}
-                      className={`flex-1 md:w-40 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex-1 md:w-44 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
                         puntosVotados === 2
                           ? "bg-[#4A8BB5] text-white shadow-sm"
                           : "bg-white border border-slate-200 text-slate-600 hover:border-[#4A8BB5]/40 hover:text-[#4A8BB5]"
                       }`}
                     >
-                      2 Pts · 2do Lugar
+                      🥉 2 Pts · 3er Lugar
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleAsignarPuntos(nom.id, 1)}
-                      className={`flex-1 md:w-40 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex-1 md:w-44 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
                         puntosVotados === 1
-                          ? "bg-[#B88F69] text-white shadow-sm"
-                          : "bg-white border border-slate-200 text-slate-600 hover:border-[#B88F69]/40 hover:text-[#B88F69]"
+                          ? "bg-[#2A7D6F] text-white shadow-sm"
+                          : "bg-white border border-slate-200 text-slate-600 hover:border-[#2A7D6F]/40 hover:text-[#2A7D6F]"
                       }`}
                     >
-                      1 Pt · 3er Lugar
+                      🎖️ 1 Pt · 4to Lugar
                     </button>
                   </div>
                 </div>
@@ -514,7 +540,7 @@ export default function VotacionPage() {
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                Guardar Boleta de Votación (Borda 3-2-1)
+                Guardar Boleta de Votación (Borda 4-3-2-1)
               </>
             )}
           </button>

@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS comite_votos (
   convocatoria_id  TEXT NOT NULL,
   integrante_id    TEXT NOT NULL,
   nominacion_id    TEXT NOT NULL,
-  puntos           INTEGER NOT NULL CHECK (puntos IN (1, 2, 3)),
+  puntos           INTEGER NOT NULL CHECK (puntos IN (1, 2, 3, 4)),
   created_at       TEXT DEFAULT (datetime('now')),
   UNIQUE (convocatoria_id, integrante_id, nominacion_id)
 );
