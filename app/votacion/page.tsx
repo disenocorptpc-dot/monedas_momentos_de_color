@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   COORDINACIONES_INICIALES,
   COLABORADORES_INICIALES,
+  EVALUADORES_INICIALES,
   PILARES_INICIALES,
   CONVOCATORIA_ACTUAL,
   ComiteInhabilitacion,
@@ -23,6 +24,7 @@ import {
   fetchInhabilitaciones,
   pushVotos,
 } from "@/lib/local-store";
+import { getUsuario } from "@/lib/session";
 import { formatPilarBadgeColor } from "@/lib/utils";
 import { validarBoletaBorda } from "@/lib/borda";
 import {
@@ -33,6 +35,8 @@ import {
   AlertTriangle,
   Send,
   Loader2,
+  PartyPopper,
+  Star,
 } from "lucide-react";
 
 export default function VotacionPage() {
@@ -42,17 +46,20 @@ export default function VotacionPage() {
   const [votosRegistrados, setVotosRegistrados] = useState<ComiteVoto[]>([]);
 
   const [votanteActualId, setVotanteActualId] = useState("");
-  // Estado de asignación de puntos { [nominacionId]: 1 | 2 | 3 }
   const [puntosAsignados, setPuntosAsignados] = useState<Record<string, 1 | 2 | 3>>({});
   const [errorMsg, setErrorMsg] = useState("");
   const [exitoMsg, setExitoMsg] = useState("");
   const [guardandoVotos, setGuardandoVotos] = useState(false);
 
+  // Detección: ¿el usuario logueado es un miembro del comité que está nominado?
+  const [usuarioNominado, setUsuarioNominado] = useState<Nominacion | null>(null);
+  const [nombreUsuario, setNombreUsuario] = useState("");
+
   useEffect(() => {
     // 1. Carga rápida desde caché local
     const com = getStoredComite();
     const inhab = getStoredInhabilitaciones();
-    const nom = getStoredNominaciones().filter((n) => n.estado === "aceptada");
+    const nom = getStoredNominaciones().filter((n) => n.estado !== "desierta");
     const vot = getStoredVotos();
 
     setComite(com);
@@ -60,34 +67,68 @@ export default function VotacionPage() {
     setNominaciones(nom);
     setVotosRegistrados(vot);
 
+    const verificarSiEstaNominado = (nomsList: Nominacion[]) => {
+      if (typeof window === "undefined") return;
+      const usuario = getUsuario();
+      if (!usuario) return;
+      setNombreUsuario(usuario.nombre || "");
+
+      const uColab = findColaborador(usuario.id);
+      const cleanUser = (usuario.nombre || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+      const nomPropia = nomsList.find((n) => {
+        if (n.nominado_id === usuario.id) return true;
+        const nomColab = findColaborador(n.nominado_id);
+        if (uColab && nomColab && uColab.id === nomColab.id) return true;
+        if (nomColab?.nombre_completo) {
+          const cleanNom = nomColab.nombre_completo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+          if (cleanUser.includes(cleanNom) || cleanNom.includes(cleanUser)) return true;
+        }
+        return false;
+      });
+
+      if (nomPropia) {
+        setUsuarioNominado(nomPropia);
+        return true;
+      }
+      return false;
+    };
+
+    // ── Detección inmediata desde caché ──
+    verificarSiEstaNominado(nom);
+
     // 2. Cargar datos frescos en segundo plano desde la base de datos central
     Promise.all([
       fetchNominaciones(),
       fetchVotos(),
       fetchInhabilitaciones(),
     ]).then(([noms, vots, inhabs]) => {
-      if (Array.isArray(noms) && noms.length > 0) {
-        setNominaciones(noms.filter((n) => n.estado === "aceptada"));
-      }
-      if (Array.isArray(vots) && vots.length > 0) {
-        setVotosRegistrados(vots);
-      }
-      if (Array.isArray(inhabs) && inhabs.length > 0) {
-        setInhabilitaciones(inhabs);
-      }
+      const nomsValidas = Array.isArray(noms) ? noms.filter((n) => n.estado !== "desierta") : nom;
+      if (nomsValidas.length > 0) setNominaciones(nomsValidas);
+      if (Array.isArray(vots) && vots.length > 0) setVotosRegistrados(vots);
+      if (Array.isArray(inhabs) && inhabs.length > 0) setInhabilitaciones(inhabs);
+
+      // Re-detectar con datos frescos
+      const esNominado = verificarSiEstaNominado(nomsValidas);
+      if (esNominado) return;
+
+      // Seleccionar primer votante habilitado
+      const primerHabilitado = com.find((m) => {
+        const isTitular = m.es_titular && m.activo;
+        const isInhab = inhab.some((i) => i.integrante_id === m.id && !i.suplente_id);
+        return isTitular && !isInhab;
+      });
+      if (primerHabilitado) setVotanteActualId(primerHabilitado.id);
     });
 
-    // Seleccionar primer votante habilitado
+    // Seleccionar primer votante habilitado (desde caché mientras carga)
     const primerHabilitado = com.find((m) => {
       const isTitular = m.es_titular && m.activo;
-      const isComodin = m.es_comodin && m.activo;
       const isInhab = inhab.some((i) => i.integrante_id === m.id && !i.suplente_id);
-      return (isTitular || isComodin) && !isInhab;
+      return isTitular && !isInhab;
     });
+    if (primerHabilitado) setVotanteActualId(primerHabilitado.id);
 
-    if (primerHabilitado) {
-      setVotanteActualId(primerHabilitado.id);
-    }
   }, []);
 
   // Cargar votos previos si el votante ya había votado
@@ -106,13 +147,11 @@ export default function VotacionPage() {
     setExitoMsg("");
   }, [votanteActualId, votosRegistrados]);
 
-  // Lista de votantes habilitados (Titulares no inhabilitados + Comodines designados)
+  // Lista de votantes habilitados
   const votantesHabilitados = comite.filter((miembro) => {
-    if (miembro.es_comodin) {
-      return inhabilitaciones.some((i) => i.suplente_id === miembro.id);
-    }
+    if (miembro.es_comodin) return false; // sin comodines
     const inhab = inhabilitaciones.find((i) => i.integrante_id === miembro.id);
-    return !inhab || inhab.suplente_id; // Habilitado si no tiene inhab o si tiene comodín asignado
+    return miembro.es_titular && miembro.activo && !inhab;
   });
 
   const votanteActual = comite.find((c) => c.id === votanteActualId);
@@ -129,21 +168,14 @@ export default function VotacionPage() {
     setExitoMsg("");
 
     const updated = { ...puntosAsignados };
-
-    // Si ya tenía estos puntos en otra nominación, se los quitamos a la otra
     Object.keys(updated).forEach((id) => {
-      if (updated[id] === puntos && id !== nominacionId) {
-        delete updated[id];
-      }
+      if (updated[id] === puntos && id !== nominacionId) delete updated[id];
     });
-
-    // Si ya tenía esta puntuación en la misma, la deseleccionamos
     if (updated[nominacionId] === puntos) {
       delete updated[nominacionId];
     } else {
       updated[nominacionId] = puntos;
     }
-
     setPuntosAsignados(updated);
   };
 
@@ -190,6 +222,51 @@ export default function VotacionPage() {
       setGuardandoVotos(false);
     }
   };
+
+  // ══════════════════════════════════════════════════════════════
+  // PANTALLA ESPECIAL: miembro del comité que fue nominado
+  // ══════════════════════════════════════════════════════════════
+  if (usuarioNominado) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center px-4">
+        <div className="relative max-w-lg w-full overflow-hidden rounded-3xl border border-[#C9A86C]/40 bg-gradient-to-br from-[#FDFBF5] via-white to-[#fef9ef] p-8 sm:p-12 shadow-xl text-center">
+          {/* Resplandor de fondo */}
+          <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-[#C9A86C]/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-[#254D6E]/8 blur-3xl" />
+
+          {/* Ícono */}
+          <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#f0d9a8] via-[#D4A84B] to-[#8B6914] shadow-lg" />
+            <div className="absolute inset-[3px] rounded-full bg-gradient-to-tl from-[#8B6914] via-[#C9A86C] to-[#f0d9a8]" />
+            <div className="absolute inset-[6px] rounded-full bg-white flex items-center justify-center">
+              <Star className="h-7 w-7 text-[#8B6914]" fill="#8B6914" />
+            </div>
+          </div>
+
+          {/* Texto */}
+          <div className="relative space-y-3">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#C9A86C]">
+              {CONVOCATORIA_ACTUAL.ciclo} · The Palace Company
+            </p>
+            <h1 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#1C3A52] leading-tight">
+              ¡Felicidades, {nombreUsuario.split(" ")[0]}!
+            </h1>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Has sido <strong className="text-[#1C3A52]">postulada como candidata</strong> en este ciclo de deliberación de Monedas · Momentos de Color.
+            </p>
+            <div className="my-4 h-px bg-gradient-to-r from-transparent via-[#C9A86C]/50 to-transparent" />
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Por protocolo institucional, los miembros del comité que participan como nominados quedan <strong className="text-slate-700">exentos de la ronda de votación</strong> en este ciclo, garantizando la imparcialidad del proceso.
+            </p>
+            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#C9A86C]/40 bg-[#C9A86C]/10 px-4 py-2 text-xs font-semibold text-[#8a6a4c]">
+              <Award className="h-3.5 w-3.5" />
+              ¡Mucho éxito en la deliberación!
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-12 max-w-5xl mx-auto">

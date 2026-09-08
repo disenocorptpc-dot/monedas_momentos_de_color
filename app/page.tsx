@@ -10,7 +10,7 @@ import {
   CONVOCATORIA_ACTUAL,
 } from "@/lib/supabase";
 import { getUsuario, setUsuario, clearUsuario, type Usuario } from "@/lib/session";
-import { getStoredNominaciones } from "@/lib/local-store";
+import { getStoredNominaciones, fetchNominaciones } from "@/lib/local-store";
 
 // ─── Opciones de selección para el picker ────────────────────────────────────
 const opcionesMesaAlta = MESA_ALTA_INICIALES.map((m) => ({
@@ -46,7 +46,14 @@ export default function HomePage() {
     setMounted(true);
     const u = getUsuario();
     setUsuarioState(u);
-    setHayNominados(getStoredNominaciones().length > 0);
+    const stored = getStoredNominaciones().filter((n) => n.estado !== "desierta");
+    if (stored.length > 0) {
+      setHayNominados(true);
+    }
+    fetchNominaciones().then((noms) => {
+      const validas = (noms || []).filter((n) => n.estado !== "desierta");
+      setHayNominados(validas.length > 0);
+    });
   }, []);
 
   const handleIngresar = () => {

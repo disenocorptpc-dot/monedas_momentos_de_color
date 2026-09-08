@@ -23,11 +23,17 @@ export const STORAGE_KEYS = {
   CONVOCATORIA: "mmc_convocatoria_v1",
 };
 
+// En desarrollo local, apuntar a producción para tener datos reales de D1
+const API_BASE =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "https://monedas-momentos-de-color.pages.dev"
+    : "";
+
 // ─── Nominaciones ─────────────────────────────────────────────────────────────
 
 export async function fetchNominaciones(): Promise<Nominacion[]> {
   try {
-    const res = await fetch(`/api/nominaciones?convocatoria_id=${CONV_ID}`, {
+    const res = await fetch(`${API_BASE}/api/nominaciones?convocatoria_id=${CONV_ID}`, {
       cache: "no-store",
     });
     if (res.ok) {
@@ -51,7 +57,7 @@ export async function pushNominacion(nom: Nominacion): Promise<boolean> {
   saveStoredNominacion(nom);
 
   try {
-    const res = await fetch("/api/nominaciones", {
+    const res = await fetch(`${API_BASE}/api/nominaciones`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(nom),
@@ -67,7 +73,7 @@ export async function pushNominacion(nom: Nominacion): Promise<boolean> {
 
 export async function fetchVotos(): Promise<ComiteVoto[]> {
   try {
-    const res = await fetch(`/api/votos?convocatoria_id=${CONV_ID}`, {
+    const res = await fetch(`${API_BASE}/api/votos?convocatoria_id=${CONV_ID}`, {
       cache: "no-store",
     });
     if (res.ok) {
@@ -89,7 +95,7 @@ export async function pushVotos(votos: ComiteVoto[]): Promise<boolean> {
   saveStoredVotos(votos);
 
   try {
-    const res = await fetch("/api/votos", {
+    const res = await fetch(`${API_BASE}/api/votos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ convocatoria_id: CONV_ID, votos }),
@@ -105,7 +111,7 @@ export async function pushVotos(votos: ComiteVoto[]): Promise<boolean> {
 
 export async function fetchInhabilitaciones(): Promise<ComiteInhabilitacion[]> {
   try {
-    const res = await fetch(`/api/inhabilitaciones?convocatoria_id=${CONV_ID}`, {
+    const res = await fetch(`${API_BASE}/api/inhabilitaciones?convocatoria_id=${CONV_ID}`, {
       cache: "no-store",
     });
     if (res.ok) {
@@ -127,7 +133,7 @@ export async function pushInhabilitacion(inhab: ComiteInhabilitacion): Promise<b
   saveInhabilitacion(inhab);
 
   try {
-    const res = await fetch("/api/inhabilitaciones", {
+    const res = await fetch(`${API_BASE}/api/inhabilitaciones`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(inhab),

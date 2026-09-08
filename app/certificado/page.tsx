@@ -5,27 +5,34 @@ import Link from "next/link";
 import {
   COORDINACIONES_INICIALES,
   COLABORADORES_INICIALES,
-  MESA_ALTA_INICIALES,
   PILARES_INICIALES,
   CONVOCATORIA_ACTUAL,
   Nominacion,
 } from "@/lib/supabase";
 import { fetchNominaciones, getStoredNominaciones } from "@/lib/local-store";
 import { getPilarTheme } from "@/lib/utils";
-import {
-  Award,
-  Printer,
-  ArrowLeft,
-} from "lucide-react";
+import { Award, Printer, ArrowLeft, ChevronDown } from "lucide-react";
+import { BRAND, MARCA } from "@/lib/brand";
+/* eslint-disable @next/next/no-img-element */
+
+/* ────────────────────────────────────────────────────────────
+   Paleta institucional The Palace Company · lib/brand.ts
+   ──────────────────────────────────────────────────────────── */
+const OCEANO = BRAND.oceano;
+const OCEANO_DEEP = BRAND.oceanoDeep;
+const BRONCE = BRAND.bronce;
+const BRONCE_CLARO = BRAND.bronceClaro;
+const PERLA = BRAND.perlaPapel;
+const TINTA = BRAND.tinta;
 
 export default function CertificadoPage() {
   const [nominaciones, setNominaciones] = useState<Nominacion[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [esGanador, setEsGanador] = useState<boolean>(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    // Cargar nominaciones desde caché y luego sincronizar
     const locales = getStoredNominaciones().filter((n) => n.estado !== "desierta");
     if (locales.length > 0) {
       setNominaciones(locales);
@@ -36,263 +43,492 @@ export default function CertificadoPage() {
       const validas = (noms || []).filter((n) => n.estado !== "desierta");
       if (validas.length > 0) {
         setNominaciones(validas);
-        
-        // Leer parámetro ?id= y ?tipo= de URL
         if (typeof window !== "undefined") {
           const params = new URLSearchParams(window.location.search);
           const paramId = params.get("id");
           const paramTipo = params.get("tipo");
-          
           if (paramId && validas.some((n) => n.id === paramId)) {
             setSelectedId(paramId);
           } else if (!selectedId) {
             setSelectedId(validas[0].id);
           }
-
-          if (paramTipo === "nominacion") {
-            setEsGanador(false);
-          } else if (paramTipo === "ganador") {
-            setEsGanador(true);
-          }
+          if (paramTipo === "nominacion") setEsGanador(false);
+          else if (paramTipo === "ganador") setEsGanador(true);
         }
       }
       setCargando(false);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const nominacionActual = nominaciones.find((n) => n.id === selectedId) || nominaciones[0];
-
-  const colaborador = COLABORADORES_INICIALES.find(
-    (c) => c.id === nominacionActual?.nominado_id
-  );
-  const coordinacion = COORDINACIONES_INICIALES.find(
-    (c) => c.id === nominacionActual?.coordinacion_id
-  );
+  const colaborador = COLABORADORES_INICIALES.find((c) => c.id === nominacionActual?.nominado_id);
+  const coordinacion = COORDINACIONES_INICIALES.find((c) => c.id === nominacionActual?.coordinacion_id);
 
   const handlePrint = () => {
-    if (typeof window !== "undefined") {
-      window.print();
-    }
+    if (typeof window !== "undefined") window.print();
   };
 
-  return (
-    <div className="min-h-screen py-4 sm:py-8 space-y-6">
-      {/* Barra de Control Superior (Oculta al imprimir) */}
-      <div className="print:hidden mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/resultados"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Volver a Resultados
-            </Link>
-            <div className="h-4 w-px bg-slate-200" />
-            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-              <Award className="h-4 w-4 text-[#B88F69]" />
-              Emisor de Diplomas & Certificados Oficiales
-            </span>
-          </div>
+  const titulo = esGanador ? "Certificado de Excelencia" : "Certificado de Nominación";
+  const rotulo = esGanador ? "Reconocimiento Oficial" : "Nominación Oficial";
+  const etiquetaHecho = esGanador ? "Momento de color documentado" : "Hecho postulado";
+  const acento = esGanador ? BRONCE : OCEANO;
+  const folio = `${CONVOCATORIA_ACTUAL.ciclo.replace(/\s/g, "").toUpperCase()}-${
+    nominacionActual?.id.slice(-6).toUpperCase() ?? "——————"
+  }`;
 
-          <div className="flex items-center gap-2.5">
+  return (
+    <div className="min-h-screen py-6 sm:py-10 print:py-0">
+      {/* ══════════════ BARRA DE CONTROL (no se imprime) ══════════════ */}
+      <div className="print:hidden mx-auto max-w-6xl mb-7 px-4 sm:px-0">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/resultados"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Volver
+              </Link>
+              <div className="h-4 w-px bg-slate-200" />
+              <span className="flex items-center gap-2 text-xs font-bold tracking-wide text-slate-800">
+                <Award className="h-4 w-4" style={{ color: BRONCE }} />
+                Emisor de Diplomas Oficiales
+              </span>
+            </div>
             <button
               type="button"
               onClick={handlePrint}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#254D6E] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#1b3952] transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-sm transition-opacity hover:opacity-90"
+              style={{ backgroundColor: OCEANO }}
             >
-              <Printer className="h-4 w-4" />
-              Imprimir / Guardar en PDF
+              <Printer className="h-3.5 w-3.5" />
+              Imprimir / PDF
             </button>
           </div>
-        </div>
 
-        {/* Controles de Selección */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Seleccionar Colaborador Postulado:
-            </label>
-            <select
-              value={selectedId}
-              onChange={(e) => setSelectedId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]"
-            >
-              {nominaciones.map((nom) => {
-                const c = COLABORADORES_INICIALES.find((col) => col.id === nom.nominado_id);
-                const coord = COORDINACIONES_INICIALES.find((co) => co.id === nom.coordinacion_id);
-                return (
-                  <option key={nom.id} value={nom.id}>
-                    {c?.nombre_completo || nom.nominado_id} — {coord?.nombre || "Área"}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
+          <div className="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Colaborador postulado
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedId}
+                  onChange={(e) => setSelectedId(e.target.value)}
+                  className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 pr-8 text-xs font-semibold text-slate-800 focus:border-[#254D6E] focus:outline-none focus:ring-2 focus:ring-[#254D6E]/15"
+                >
+                  {nominaciones.map((nom) => {
+                    const c = COLABORADORES_INICIALES.find((col) => col.id === nom.nominado_id);
+                    const coord = COORDINACIONES_INICIALES.find((co) => co.id === nom.coordinacion_id);
+                    return (
+                      <option key={nom.id} value={nom.id}>
+                        {c?.nombre_completo || nom.nominado_id} — {coord?.nombre || "Área"}
+                      </option>
+                    );
+                  })}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+              </div>
+            </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Tipo de Certificado:
-            </label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setEsGanador(true)}
-                className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold border transition-all ${
-                  esGanador
-                    ? "border-[#B88F69] bg-[#B88F69]/15 text-[#8a6a4c] shadow-xs"
-                    : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                🪙 Galardonado Moneda de Color
-              </button>
-              <button
-                type="button"
-                onClick={() => setEsGanador(false)}
-                className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold border transition-all ${
-                  !esGanador
-                    ? "border-blue-500 bg-blue-50 text-blue-800 shadow-xs"
-                    : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                🏅 Mención / Postulación de Honor
-              </button>
+            <div>
+              <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Tipo de reconocimiento
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEsGanador(true)}
+                  className="rounded-xl border px-3 py-2.5 text-[11px] font-bold transition-all"
+                  style={
+                    esGanador
+                      ? { borderColor: BRONCE, backgroundColor: "#FBF6EF", color: "#8A6A4C" }
+                      : { borderColor: "#E2E8F0", backgroundColor: "#F8FAFC", color: "#64748B" }
+                  }
+                >
+                  Moneda de Color
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEsGanador(false)}
+                  className="rounded-xl border px-3 py-2.5 text-[11px] font-bold transition-all"
+                  style={
+                    !esGanador
+                      ? { borderColor: `${OCEANO}66`, backgroundColor: "#F1F5F9", color: OCEANO }
+                      : { borderColor: "#E2E8F0", backgroundColor: "#F8FAFC", color: "#64748B" }
+                  }
+                >
+                  Nominación
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ───────────────────────────────────────────────────────────────────────── */}
-      {/* EL DIPLOMA / CERTIFICADO IMPRIMIBLE */}
-      {/* ───────────────────────────────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-5xl px-2 sm:px-0">
+      {/* ══════════════════════════════════════════════════════════════
+          EL DIPLOMA · A4 horizontal, institucional moderno
+
+          Alineado a la izquierda, pero a MEDIDA COMPLETA (87cqw): cada
+          bloque llega de margen a margen, con un dato al costado
+          derecho, para que no queden zonas muertas.
+
+          El aire vertical NO se acumula al final: el cuerpo reparte el
+          sobrante entre los cuatro bloques con space-between, así que
+          la distribución se mantiene pareja sea que el nombre ocupe
+          una o dos líneas, y la cita dos o tres.
+
+          Todo se mide en cqw. Ver design_system/README.md § 4.
+      ══════════════════════════════════════════════════════════════ */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-0">
         <div
           id="diploma-print"
-          className="relative mx-auto w-full aspect-[1.414/1] max-w-[1040px] rounded-2xl bg-[#FCFBF7] p-8 sm:p-14 shadow-xl border-8 border-[#254D6E] overflow-hidden flex flex-col justify-between print:shadow-none print:border-8 print:border-[#254D6E] print:m-0 print:p-10 print:w-full print:h-screen print:max-w-none"
+          className="relative mx-auto w-full overflow-hidden print:shadow-none"
+          style={{
+            aspectRatio: "1.414 / 1",
+            containerType: "inline-size",
+            backgroundColor: PERLA,
+            boxShadow: "0 24px 60px -24px rgba(15,23,42,0.30)",
+          }}
         >
-          {/* Filete interior dorado decorativo */}
-          <div className="pointer-events-none absolute inset-3 rounded-lg border-2 border-[#B88F69]/60" />
-          <div className="pointer-events-none absolute inset-4 rounded-md border border-[#B88F69]/30" />
+          {/* ─── Filigrana: monograma TPC, muy tenue, sangrando a la derecha ─── */}
+          <img
+            src={MARCA.monogramaOceano}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute select-none"
+            style={{ right: "-8cqw", top: "21cqw", height: "40cqw", width: "auto", opacity: 0.038 }}
+          />
 
-          {/* Esquinas clásicas de certificado */}
-          <div className="pointer-events-none absolute top-5 left-5 h-8 w-8 border-t-2 border-l-2 border-[#B88F69]" />
-          <div className="pointer-events-none absolute top-5 right-5 h-8 w-8 border-t-2 border-r-2 border-[#B88F69]" />
-          <div className="pointer-events-none absolute bottom-5 left-5 h-8 w-8 border-b-2 border-l-2 border-[#B88F69]" />
-          <div className="pointer-events-none absolute bottom-5 right-5 h-8 w-8 border-b-2 border-r-2 border-[#B88F69]" />
+          {/* ─── Textura de papel muy sutil ─── */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              opacity: 0.03,
+              backgroundImage: `repeating-linear-gradient(135deg, ${OCEANO} 0 1px, transparent 1px 9px)`,
+            }}
+          />
 
-          {/* Resplandores suaves de fondo */}
-          <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-[#B88F69]/5 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[#254D6E]/5 blur-2xl" />
-
-          {/* 1. ENCABEZADO INSTITUCIONAL */}
-          <div className="relative z-10 text-center space-y-1.5">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <div className="h-7 w-7 rounded-md bg-[#254D6E] flex items-center justify-center text-white font-serif font-black text-sm shadow-sm">
-                M
-              </div>
-              <span className="font-serif tracking-[0.25em] text-xs font-bold text-slate-800 uppercase">
-                The Palace Company
-              </span>
-            </div>
-            <p className="text-[10px] sm:text-xs font-semibold tracking-[0.18em] text-[#B88F69] uppercase">
-              Dirección Corporativa de Diseño y Experiencia
-            </p>
-            <div className="pt-2">
-              <h1 className="font-serif text-2xl sm:text-4xl font-extrabold text-[#254D6E] tracking-tight uppercase">
-                {esGanador ? "Certificado de Excelencia" : "Constancia de Reconocimiento"}
-              </h1>
-              <p className="font-serif italic text-xs sm:text-sm text-slate-600 mt-0.5">
-                {esGanador
-                  ? "Moneda de Color · Convocatoria Oficial " + CONVOCATORIA_ACTUAL.ciclo
-                  : "Postulación al Mérito · Momento de Color " + CONVOCATORIA_ACTUAL.ciclo}
+          <div className="relative flex h-full flex-col">
+            {/* ═══════════ 1 · BANDA SUPERIOR ═══════════ */}
+            <header
+              className="relative flex shrink-0 items-center justify-between"
+              style={{
+                height: "10cqw",
+                backgroundColor: OCEANO,
+                paddingLeft: "6.5cqw",
+                paddingRight: "6.5cqw",
+              }}
+            >
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  opacity: 0.5,
+                  backgroundImage: `linear-gradient(115deg, ${OCEANO_DEEP} 0%, ${OCEANO} 45%, ${OCEANO_DEEP} 100%)`,
+                }}
+              />
+              {/* Logotipo secundario oficial, versión negativa */}
+              <img
+                src={MARCA.logoVerticalBlanco}
+                alt={MARCA.nombre}
+                className="relative"
+                style={{ height: "4.6cqw", width: "auto" }}
+              />
+              <p
+                className="relative uppercase"
+                style={{
+                  fontSize: "0.95cqw",
+                  letterSpacing: "0.3em",
+                  color: "rgba(255,255,255,0.62)",
+                }}
+              >
+                Monedas · Momentos de Color
               </p>
-            </div>
-          </div>
+            </header>
 
-          {/* 2. CUERPO DEL DIPLOMA */}
-          <div className="relative z-10 my-auto text-center space-y-3 sm:space-y-4">
-            <p className="text-xs sm:text-sm text-slate-600 font-serif">
-              Se otorga con orgullo y distinción el presente reconocimiento a:
-            </p>
+            {/* Filete bronce */}
+            <div
+              className="shrink-0"
+              style={{
+                height: "0.32cqw",
+                background: `linear-gradient(90deg, ${BRONCE} 0%, ${BRONCE_CLARO} 50%, ${BRONCE} 100%)`,
+              }}
+            />
 
-            {/* Nombre del Colaborador */}
-            <div className="py-1">
-              <h2 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-wide border-b-2 border-[#B88F69]/40 inline-block px-8 pb-1">
-                {colaborador?.nombre_completo || "Colaborador Destacado"}
-              </h2>
-              <p className="text-xs sm:text-sm font-semibold text-[#254D6E] mt-2 uppercase tracking-wider">
-                {coordinacion?.nombre || "Coordinación Corporativa"}
-              </p>
-            </div>
-
-            {/* Motivo y Hecho */}
-            <div className="max-w-2xl mx-auto space-y-2">
-              <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed font-serif">
-                {esGanador
-                  ? "Por su extraordinaria vocación de servicio, calidez humana y por encarnar de manera ejemplar la filosofía de hospitalidad de The Palace Company en el momento de color documentado:"
-                  : "Por su destacada participación y firme compromiso con la excelencia operativa y humana durante el presente ciclo de deliberación:"}
-              </p>
-              <div className="rounded-xl border border-[#B88F69]/20 bg-white/80 p-3 sm:p-4 text-xs sm:text-sm text-slate-700 italic font-serif shadow-xs">
-                "{nominacionActual?.descripcion_hecho || "Acción extraordinaria orientada a la satisfacción y excelencia en la experiencia del huésped."}"
-              </div>
-            </div>
-
-            {/* Pilares Demostrados */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-              {nominacionActual?.pilares.map((pKey) => {
-                const pilar = PILARES_INICIALES.find((p) => p.clave === pKey);
-                const theme = getPilarTheme(pKey);
-                return (
+            {/* ═══════════ 2 · CUERPO ═══════════
+                Cuatro bloques, con el sobrante repartido entre ellos. */}
+            <main
+              className="relative flex flex-1 flex-col justify-between"
+              style={{ padding: "4.6cqw 6.5cqw 3.6cqw 6.5cqw" }}
+            >
+              {/* ── BLOQUE A · rótulo + título ── */}
+              <div>
+                <div className="flex items-center" style={{ gap: "1.3cqw" }}>
                   <span
-                    key={pKey}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold shadow-xs text-white"
-                    style={{ backgroundColor: theme.color }}
+                    style={{
+                      width: "1cqw",
+                      height: "1cqw",
+                      backgroundColor: acento,
+                      transform: "rotate(45deg)",
+                      display: "block",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span
+                    className="font-semibold uppercase"
+                    style={{
+                      fontSize: "1cqw",
+                      letterSpacing: "0.34em",
+                      color: esGanador ? "#8A6A4C" : OCEANO,
+                      whiteSpace: "nowrap",
+                    }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                    {pilar?.nombre || pKey}
+                    {rotulo}
                   </span>
-                );
-              })}
-            </div>
-          </div>
+                  <span
+                    style={{
+                      flex: 1,
+                      height: 1,
+                      background: `linear-gradient(90deg, ${BRONCE}80, ${BRONCE}30)`,
+                    }}
+                  />
+                  <span
+                    className="font-semibold uppercase"
+                    style={{
+                      fontSize: "0.88cqw",
+                      letterSpacing: "0.26em",
+                      color: OCEANO,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Ciclo {CONVOCATORIA_ACTUAL.ciclo}
+                  </span>
+                </div>
 
-          {/* 3. FIRMAS Y SELLO OFICIAL */}
-          <div className="relative z-10 grid grid-cols-3 items-end pt-4 sm:pt-6 border-t border-[#B88F69]/30">
-            {/* Firma Izquierda */}
-            <div className="text-center space-y-1">
-              <div className="mx-auto w-28 sm:w-44 border-b border-slate-700 pb-1">
-                <span className="font-serif italic text-xs text-slate-700">Rufino Santa Rosa</span>
+                <h1
+                  className="font-serif"
+                  style={{
+                    fontSize: "3.2cqw",
+                    fontWeight: 300,
+                    letterSpacing: "0.02em",
+                    color: TINTA,
+                    marginTop: "1.9cqw",
+                    lineHeight: 1.08,
+                  }}
+                >
+                  {titulo}
+                </h1>
               </div>
-              <p className="text-[9px] sm:text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                Mesa Alta Postulante
-              </p>
-              <p className="text-[8px] sm:text-[10px] text-slate-500">Dirección de Diseño y Experiencia</p>
-            </div>
 
-            {/* Sello Central Dorado */}
-            <div className="flex flex-col items-center justify-center">
-              <div className="relative flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full border-4 border-[#B88F69] bg-gradient-to-br from-[#f6e5cd] via-[#e2be8a] to-[#c69a5e] shadow-md">
-                <Award className="h-8 w-8 sm:h-10 sm:w-10 text-[#543b19]" />
-                <div className="absolute inset-1 rounded-full border border-dashed border-[#543b19]/40" />
-              </div>
-              <span className="text-[9px] sm:text-[10px] font-mono font-bold tracking-widest text-[#8a6a4c] uppercase mt-1">
-                SELLO OFICIAL
-              </span>
-            </div>
+              {/* ── BLOQUE B · nombre + coordinación + pilares ── */}
+              <div>
+                <h2
+                  className="font-serif"
+                  style={{
+                    fontSize: "5.4cqw",
+                    fontWeight: 500,
+                    color: OCEANO,
+                    letterSpacing: "-0.008em",
+                    lineHeight: 1.05,
+                  }}
+                >
+                  {colaborador?.nombre_completo || "Colaborador Destacado"}
+                </h2>
 
-            {/* Firma Derecha */}
-            <div className="text-center space-y-1">
-              <div className="mx-auto w-28 sm:w-44 border-b border-slate-700 pb-1">
-                <span className="font-serif italic text-xs text-slate-700">Comité Deliberador</span>
+                <div
+                  style={{
+                    height: "0.14cqw",
+                    marginTop: "1.7cqw",
+                    background: `linear-gradient(90deg, ${BRONCE} 0%, ${BRONCE}55 45%, ${BRONCE}00 100%)`,
+                  }}
+                />
+
+                {/* Coordinación a la izquierda, pilares a la derecha: la fila
+                    llega de margen a margen y ninguno queda flotando. */}
+                <div
+                  className="flex flex-wrap items-center justify-between"
+                  style={{ gap: "1.6cqw", marginTop: "1.5cqw" }}
+                >
+                  <p
+                    className="font-semibold uppercase"
+                    style={{ fontSize: "1cqw", letterSpacing: "0.28em", color: "#8A7455" }}
+                  >
+                    {coordinacion?.nombre || "Coordinación Corporativa"}
+                  </p>
+
+                  <div className="flex flex-wrap items-center justify-end" style={{ gap: "0.7cqw" }}>
+                    {nominacionActual?.pilares.map((pKey) => {
+                      const pilar = PILARES_INICIALES.find((p) => p.clave === pKey);
+                      const theme = getPilarTheme(pKey);
+                      return (
+                        <span
+                          key={pKey}
+                          className="inline-flex items-center font-semibold uppercase"
+                          style={{
+                            gap: "0.6cqw",
+                            fontSize: "0.8cqw",
+                            letterSpacing: "0.16em",
+                            color: theme.color,
+                            border: `1px solid ${theme.color}59`,
+                            backgroundColor: `${theme.color}12`,
+                            padding: "0.48cqw 1.05cqw",
+                            borderRadius: "999px",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: "0.45cqw",
+                              height: "0.45cqw",
+                              borderRadius: "999px",
+                              backgroundColor: theme.color,
+                              display: "block",
+                            }}
+                          />
+                          {pilar?.nombre || pKey}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-              <p className="text-[9px] sm:text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                Cultura Organizacional
-              </p>
-              <p className="text-[8px] sm:text-[10px] text-slate-500">The Palace Company</p>
-            </div>
+
+              {/* ── BLOQUE C · el hecho, con el sello al costado ── */}
+              <div className="flex items-center" style={{ gap: "5cqw" }}>
+                <div style={{ flex: 1 }}>
+                  <div className="flex items-center" style={{ gap: "1cqw" }}>
+                    <span
+                      style={{
+                        width: "2.4cqw",
+                        height: 1,
+                        display: "block",
+                        backgroundColor: `${BRONCE}AA`,
+                      }}
+                    />
+                    <span
+                      className="font-semibold uppercase"
+                      style={{ fontSize: "0.82cqw", letterSpacing: "0.26em", color: "#8A7455" }}
+                    >
+                      {etiquetaHecho}
+                    </span>
+                  </div>
+
+                  <p
+                    className="font-serif"
+                    style={{
+                      fontSize: "2.05cqw",
+                      fontStyle: "italic",
+                      color: "#3D3527",
+                      lineHeight: 1.5,
+                      marginTop: "1.1cqw",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    &ldquo;
+                    {nominacionActual?.descripcion_hecho ||
+                      "Acción extraordinaria orientada a la excelencia en la experiencia del huésped."}
+                    &rdquo;
+                  </p>
+                </div>
+
+                {/* Sello oficial */}
+                <img
+                  src={MARCA.selloOceano}
+                  alt="Sello oficial The Palace Company"
+                  className="shrink-0"
+                  style={{ width: "11.5cqw", height: "11.5cqw" }}
+                />
+              </div>
+
+              {/* ── BLOQUE D · emisor y folio ── */}
+              <div>
+                <div
+                  style={{
+                    height: 1,
+                    background: `linear-gradient(90deg, ${BRONCE}70, ${BRONCE}25 55%, ${BRONCE}00 100%)`,
+                  }}
+                />
+                <div
+                  className="flex flex-wrap items-end justify-between"
+                  style={{ gap: "2cqw", marginTop: "1.5cqw" }}
+                >
+                  <div>
+                    <p
+                      className="font-semibold uppercase"
+                      style={{ fontSize: "0.95cqw", letterSpacing: "0.22em", color: OCEANO }}
+                    >
+                      Otorgado por el Comité Deliberador
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "0.78cqw",
+                        letterSpacing: "0.09em",
+                        color: "#9A9484",
+                        marginTop: "0.45cqw",
+                      }}
+                    >
+                      {MARCA.nombre} · Programa de Reconocimiento al Talento Humano
+                    </p>
+                  </div>
+
+                  <p
+                    className="uppercase"
+                    style={{
+                      fontSize: "0.75cqw",
+                      letterSpacing: "0.26em",
+                      color: "#9A9484",
+                      fontVariantNumeric: "tabular-nums",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Folio {folio}
+                  </p>
+                </div>
+              </div>
+            </main>
           </div>
         </div>
       </div>
+
+      {/* ══════════════ Estilos de impresión ══════════════ */}
+      <style jsx global>{`
+        @page {
+          size: A4 landscape;
+          margin: 0;
+        }
+        @media print {
+          html,
+          body {
+            background: #ffffff !important;
+          }
+          body * {
+            visibility: hidden;
+          }
+          #diploma-print,
+          #diploma-print * {
+            visibility: visible;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          #diploma-print {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            margin: 0 !important;
+            width: 100vw !important;
+            max-width: none !important;
+            height: auto !important;
+            aspect-ratio: 1.414 / 1 !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
