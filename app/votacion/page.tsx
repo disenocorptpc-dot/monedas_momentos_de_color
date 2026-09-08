@@ -24,7 +24,7 @@ import {
   fetchInhabilitaciones,
   pushVotos,
 } from "@/lib/local-store";
-import { getUsuario } from "@/lib/session";
+import { getUsuario, type Usuario } from "@/lib/session";
 import { formatPilarBadgeColor } from "@/lib/utils";
 import { validarBoletaBorda } from "@/lib/borda";
 import {
@@ -37,6 +37,8 @@ import {
   Loader2,
   PartyPopper,
   Star,
+  User,
+  Info,
 } from "lucide-react";
 
 export default function VotacionPage() {
@@ -45,6 +47,7 @@ export default function VotacionPage() {
   const [nominaciones, setNominaciones] = useState<Nominacion[]>([]);
   const [votosRegistrados, setVotosRegistrados] = useState<ComiteVoto[]>([]);
 
+  const [usuarioLogueado, setUsuarioLogueado] = useState<Usuario | null>(null);
   const [votanteActualId, setVotanteActualId] = useState("");
   const [puntosAsignados, setPuntosAsignados] = useState<Record<string, 1 | 2 | 3 | 4>>({});
   const [errorMsg, setErrorMsg] = useState("");
@@ -67,10 +70,11 @@ export default function VotacionPage() {
     setNominaciones(nom);
     setVotosRegistrados(vot);
 
+    const usuario = typeof window !== "undefined" ? getUsuario() : null;
+    setUsuarioLogueado(usuario);
+
     const verificarSiEstaNominado = (nomsList: Nominacion[]) => {
-      if (typeof window === "undefined") return;
-      const usuario = getUsuario();
-      if (!usuario) return;
+      if (!usuario) return false;
       setNombreUsuario(usuario.nombre || "");
 
       const uColab = findColaborador(usuario.id);
@@ -94,8 +98,29 @@ export default function VotacionPage() {
       return false;
     };
 
+    const resolverVotanteId = (comiteList: ComiteIntegrante[], inhabList: ComiteInhabilitacion[], u: Usuario | null) => {
+      if (u && u.rol === "comite") {
+        const miMiembro = comiteList.find((m) => {
+          if (m.colaborador_id === u.id) return true;
+          const colab = findColaborador(m.colaborador_id);
+          if (colab && colab.id === u.id) return true;
+          if (colab && colab.nombre_completo.toLowerCase() === u.nombre.toLowerCase()) return true;
+          return false;
+        });
+        if (miMiembro) return miMiembro.id;
+      }
+      const primerHabilitado = comiteList.find((m) => {
+        const isTitular = m.es_titular && m.activo;
+        const isInhab = inhabList.some((i) => i.integrante_id === m.id && !i.suplente_id);
+        return isTitular && !isInhab;
+      });
+      return primerHabilitado?.id || "";
+    };
+
     // ── Detección inmediata desde caché ──
     verificarSiEstaNominado(nom);
+    const initialVotante = resolverVotanteId(com, inhab, usuario);
+    if (initialVotante) setVotanteActualId(initialVotante);
 
     // 2. Cargar datos frescos en segundo plano desde la base de datos central
     Promise.all([
@@ -112,23 +137,9 @@ export default function VotacionPage() {
       const esNominado = verificarSiEstaNominado(nomsValidas);
       if (esNominado) return;
 
-      // Seleccionar primer votante habilitado
-      const primerHabilitado = com.find((m) => {
-        const isTitular = m.es_titular && m.activo;
-        const isInhab = inhab.some((i) => i.integrante_id === m.id && !i.suplente_id);
-        return isTitular && !isInhab;
-      });
-      if (primerHabilitado) setVotanteActualId(primerHabilitado.id);
+      const freshVotante = resolverVotanteId(com, inhabs, usuario);
+      if (freshVotante) setVotanteActualId(freshVotante);
     });
-
-    // Seleccionar primer votante habilitado (desde caché mientras carga)
-    const primerHabilitado = com.find((m) => {
-      const isTitular = m.es_titular && m.activo;
-      const isInhab = inhab.some((i) => i.integrante_id === m.id && !i.suplente_id);
-      return isTitular && !isInhab;
-    });
-    if (primerHabilitado) setVotanteActualId(primerHabilitado.id);
-
   }, []);
 
   // Cargar votos previos si el votante ya había votado
@@ -280,80 +291,160 @@ export default function VotacionPage() {
           Votación del Comité ({CONVOCATORIA_ACTUAL.ciclo})
         </h1>
         <p className="text-xs text-slate-500 sm:text-sm">
-          Asigna <strong className="text-slate-700">4 puntos</strong> a tu 1er lugar (🥇), <strong className="text-slate-700">3 puntos</strong> al 2do lugar (🥈), <strong className="text-slate-700">2 puntos</strong> al 3er lugar (🥉) y <strong className="text-slate-700">1 punto</strong> al 4to lugar (🎖️). Cada puntuación debe asignarse a un nominado distinto para cubrir las 4 Monedas de Color.
+          Asigna <strong className="text-slate-700">4 Pts</strong> (🥇), <strong className="text-slate-700">3 Pts</strong> (🥈), <strong className="text-slate-700">2 Pts</strong> (🥉) y <strong className="text-slate-700">1 Pt</strong> (🎖️) a cuatro nominados distintos para cubrir las 4 Monedas de Color del ciclo.
         </p>
       </div>
 
-      {/* Selector de Votante */}
+      {/* Identidad del Votante */}
       <div className="panel-card rounded-xl p-6 border border-slate-200 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
-              Seleccionar Integrante del Comité:
-            </label>
-            <select
-              value={votanteActualId}
-              onChange={(e) => setVotanteActualId(e.target.value)}
-              className="w-full sm:w-80 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]/20"
-            >
-              {comite.map((miembro) => {
-                const c = findColaborador(miembro.colaborador_id);
-                const coord = COORDINACIONES_INICIALES.find((co) => co.id === miembro.coordinacion_id);
-                const inhab = inhabilitaciones.find((i) => i.integrante_id === miembro.id);
-                const esInhab = Boolean(inhab && !inhab.suplente_id);
+        {/* Caso A: Usuario logueado es del Comité (su voto es propio y directo) */}
+        {usuarioLogueado && usuarioLogueado.rol === "comite" ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#254D6E]/10 text-[#254D6E] font-bold text-sm border border-[#254D6E]/20">
+                {usuarioLogueado.nombre.slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#2A7D6F] bg-[#2A7D6F]/10 px-2 py-0.5 rounded-full">
+                  Comité Evaluador
+                </span>
+                <h2 className="text-base font-bold text-slate-900 mt-0.5">
+                  {usuarioLogueado.nombre}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {votanteCoord?.nombre || "Coordinación"} · Boleta Oficial
+                </p>
+              </div>
+            </div>
 
-                return (
-                  <option key={miembro.id} value={miembro.id} disabled={esInhab}>
-                    {c?.nombre_completo || "Integrante"} ({coord?.nombre || "Comité"}) {esInhab ? "[Inhabilitado]" : ""}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* Resumen de boleta actual */}
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 flex items-center gap-3">
-            <span className="text-xs font-semibold text-slate-500">Puntos Asignados:</span>
-            <div className="flex gap-2">
-              <span
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                  Object.values(puntosAsignados).includes(4)
-                    ? "bg-[#B88F69] text-white shadow-xs"
-                    : "bg-white text-slate-400 border border-slate-200"
-                }`}
-              >
-                4 pts {Object.values(puntosAsignados).includes(4) ? "✓" : "—"}
-              </span>
-              <span
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                  Object.values(puntosAsignados).includes(3)
-                    ? "bg-[#254D6E] text-white shadow-xs"
-                    : "bg-white text-slate-400 border border-slate-200"
-                }`}
-              >
-                3 pts {Object.values(puntosAsignados).includes(3) ? "✓" : "—"}
-              </span>
-              <span
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                  Object.values(puntosAsignados).includes(2)
-                    ? "bg-[#4A8BB5] text-white shadow-xs"
-                    : "bg-white text-slate-400 border border-slate-200"
-                }`}
-              >
-                2 pts {Object.values(puntosAsignados).includes(2) ? "✓" : "—"}
-              </span>
-              <span
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                  Object.values(puntosAsignados).includes(1)
-                    ? "bg-[#2A7D6F] text-white shadow-xs"
-                    : "bg-white text-slate-400 border border-slate-200"
-                }`}
-              >
-                1 pt {Object.values(puntosAsignados).includes(1) ? "✓" : "—"}
-              </span>
+            {/* Resumen de boleta actual */}
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 flex items-center gap-3">
+              <span className="text-xs font-semibold text-slate-500">Puntos Asignados:</span>
+              <div className="flex gap-2">
+                <span
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                    Object.values(puntosAsignados).includes(4)
+                      ? "bg-[#B88F69] text-white shadow-xs"
+                      : "bg-white text-slate-400 border border-slate-200"
+                  }`}
+                >
+                  4 pts {Object.values(puntosAsignados).includes(4) ? "✓" : "—"}
+                </span>
+                <span
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                    Object.values(puntosAsignados).includes(3)
+                      ? "bg-[#254D6E] text-white shadow-xs"
+                      : "bg-white text-slate-400 border border-slate-200"
+                  }`}
+                >
+                  3 pts {Object.values(puntosAsignados).includes(3) ? "✓" : "—"}
+                </span>
+                <span
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                    Object.values(puntosAsignados).includes(2)
+                      ? "bg-[#4A8BB5] text-white shadow-xs"
+                      : "bg-white text-slate-400 border border-slate-200"
+                  }`}
+                >
+                  2 pts {Object.values(puntosAsignados).includes(2) ? "✓" : "—"}
+                </span>
+                <span
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                    Object.values(puntosAsignados).includes(1)
+                      ? "bg-[#2A7D6F] text-white shadow-xs"
+                      : "bg-white text-slate-400 border border-slate-200"
+                  }`}
+                >
+                  1 pt {Object.values(puntosAsignados).includes(1) ? "✓" : "—"}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          /* Caso B: Mesa Alta o sesión sin comité (modo vista o simulación) */
+          <div className="space-y-4">
+            {usuarioLogueado && usuarioLogueado.rol === "mesa_alta" && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-4 flex items-start gap-3 text-xs text-amber-900">
+                <User className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-bold">Sesión activa: {usuarioLogueado.nombre} (Mesa Alta)</p>
+                  <p className="text-amber-800 leading-relaxed">
+                    Tu rol oficial como titular de Mesa Alta es <strong>nominar</strong>. La votación corresponde exclusivamente a los 6 miembros del <strong>Comité Evaluador</strong>. Desde esta pantalla puedes consultar las candidaturas o simular la emisión de votos seleccionando a un integrante del comité:
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  {usuarioLogueado?.rol === "mesa_alta" ? "Simular boleta como miembro del comité:" : "Seleccionar Integrante del Comité:"}
+                </label>
+                <select
+                  value={votanteActualId}
+                  onChange={(e) => setVotanteActualId(e.target.value)}
+                  className="w-full sm:w-80 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#254D6E] focus:outline-none focus:ring-1 focus:ring-[#254D6E]/20"
+                >
+                  {comite.map((miembro) => {
+                    const c = findColaborador(miembro.colaborador_id);
+                    const coord = COORDINACIONES_INICIALES.find((co) => co.id === miembro.coordinacion_id);
+                    const inhab = inhabilitaciones.find((i) => i.integrante_id === miembro.id);
+                    const esInhab = Boolean(inhab && !inhab.suplente_id);
+
+                    return (
+                      <option key={miembro.id} value={miembro.id} disabled={esInhab}>
+                        {c?.nombre_completo || "Integrante"} ({coord?.nombre || "Comité"}) {esInhab ? "[Inhabilitado]" : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {/* Resumen de boleta actual */}
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 flex items-center gap-3">
+                <span className="text-xs font-semibold text-slate-500">Puntos Asignados:</span>
+                <div className="flex gap-2">
+                  <span
+                    className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                      Object.values(puntosAsignados).includes(4)
+                        ? "bg-[#B88F69] text-white shadow-xs"
+                        : "bg-white text-slate-400 border border-slate-200"
+                    }`}
+                  >
+                    4 pts {Object.values(puntosAsignados).includes(4) ? "✓" : "—"}
+                  </span>
+                  <span
+                    className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                      Object.values(puntosAsignados).includes(3)
+                        ? "bg-[#254D6E] text-white shadow-xs"
+                        : "bg-white text-slate-400 border border-slate-200"
+                    }`}
+                  >
+                    3 pts {Object.values(puntosAsignados).includes(3) ? "✓" : "—"}
+                  </span>
+                  <span
+                    className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                      Object.values(puntosAsignados).includes(2)
+                        ? "bg-[#4A8BB5] text-white shadow-xs"
+                        : "bg-white text-slate-400 border border-slate-200"
+                    }`}
+                  >
+                    2 pts {Object.values(puntosAsignados).includes(2) ? "✓" : "—"}
+                  </span>
+                  <span
+                    className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                      Object.values(puntosAsignados).includes(1)
+                        ? "bg-[#2A7D6F] text-white shadow-xs"
+                        : "bg-white text-slate-400 border border-slate-200"
+                    }`}
+                  >
+                    1 pt {Object.values(puntosAsignados).includes(1) ? "✓" : "—"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Alertas */}
@@ -409,7 +500,7 @@ export default function VotacionPage() {
 
                       {puntosVotados && (
                         <span
-                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
                             puntosVotados === 4
                               ? "bg-[#B88F69] text-white"
                               : puntosVotados === 3
@@ -420,7 +511,7 @@ export default function VotacionPage() {
                           }`}
                         >
                           <Award className="h-3.5 w-3.5" />
-                          {puntosVotados === 4 ? "🥇 4 PUNTOS (1er Lugar)" : puntosVotados === 3 ? "🥈 3 PUNTOS (2do Lugar)" : puntosVotados === 2 ? "🥉 2 PUNTOS (3er Lugar)" : "🎖️ 1 PUNTO (4to Lugar)"}
+                          {puntosVotados === 4 ? "🥇 4 Pts" : puntosVotados === 3 ? "🥈 3 Pts" : puntosVotados === 2 ? "🥉 2 Pts" : "🎖️ 1 Pt"}
                         </span>
                       )}
                     </div>
@@ -474,49 +565,49 @@ export default function VotacionPage() {
                     <button
                       type="button"
                       onClick={() => handleAsignarPuntos(nom.id, 4)}
-                      className={`flex-1 md:w-44 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex-1 md:w-32 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
                         puntosVotados === 4
                           ? "bg-[#B88F69] text-white shadow-sm"
                           : "bg-white border border-slate-200 text-slate-600 hover:border-[#B88F69]/60 hover:text-[#B88F69]"
                       }`}
                     >
-                      🥇 4 Pts · 1er Lugar
+                      🥇 4 Pts
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleAsignarPuntos(nom.id, 3)}
-                      className={`flex-1 md:w-44 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex-1 md:w-32 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
                         puntosVotados === 3
                           ? "bg-[#254D6E] text-white shadow-sm"
                           : "bg-white border border-slate-200 text-slate-600 hover:border-[#254D6E]/40 hover:text-[#254D6E]"
                       }`}
                     >
-                      🥈 3 Pts · 2do Lugar
+                      🥈 3 Pts
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleAsignarPuntos(nom.id, 2)}
-                      className={`flex-1 md:w-44 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex-1 md:w-32 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
                         puntosVotados === 2
                           ? "bg-[#4A8BB5] text-white shadow-sm"
                           : "bg-white border border-slate-200 text-slate-600 hover:border-[#4A8BB5]/40 hover:text-[#4A8BB5]"
                       }`}
                     >
-                      🥉 2 Pts · 3er Lugar
+                      🥉 2 Pts
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleAsignarPuntos(nom.id, 1)}
-                      className={`flex-1 md:w-44 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex-1 md:w-32 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
                         puntosVotados === 1
                           ? "bg-[#2A7D6F] text-white shadow-sm"
                           : "bg-white border border-slate-200 text-slate-600 hover:border-[#2A7D6F]/40 hover:text-[#2A7D6F]"
                       }`}
                     >
-                      🎖️ 1 Pt · 4to Lugar
+                      🎖️ 1 Pt
                     </button>
                   </div>
                 </div>
