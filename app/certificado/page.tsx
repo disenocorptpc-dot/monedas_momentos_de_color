@@ -11,8 +11,9 @@ import {
 } from "@/lib/supabase";
 import { fetchNominaciones, getStoredNominaciones } from "@/lib/local-store";
 import { getPilarTheme } from "@/lib/utils";
-import { Award, Printer, ArrowLeft, ChevronDown } from "lucide-react";
+import { Award, Printer, ArrowLeft, ChevronDown, Sparkles, RefreshCw, RotateCcw } from "lucide-react";
 import { BRAND, MARCA } from "@/lib/brand";
+import { sintetizarHechoDiploma } from "@/lib/sintesis-diploma";
 /* eslint-disable @next/next/no-img-element */
 
 /* ────────────────────────────────────────────────────────────
@@ -31,8 +32,22 @@ export default function CertificadoPage() {
   const [esGanador, setEsGanador] = useState<boolean>(true);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [cargando, setCargando] = useState(true);
+  const [textosDiplomas, setTextosDiplomas] = useState<Record<string, string>>({});
+  const [estaSintetizando, setEstaSintetizando] = useState<boolean>(false);
 
   useEffect(() => {
+    // Cargar textos sintetizados previamente guardados
+    if (typeof window !== "undefined") {
+      try {
+        const guardados = localStorage.getItem("mmc_diploma_sintesis_v1");
+        if (guardados) {
+          setTextosDiplomas(JSON.parse(guardados));
+        }
+      } catch {
+        /* noop */
+      }
+    }
+
     const locales = getStoredNominaciones().filter((n) => n.estado !== "desierta");
     if (locales.length > 0) {
       setNominaciones(locales);
@@ -64,6 +79,72 @@ export default function CertificadoPage() {
   const nominacionActual = nominaciones.find((n) => n.id === selectedId) || nominaciones[0];
   const colaborador = COLABORADORES_INICIALES.find((c) => c.id === nominacionActual?.nominado_id);
   const coordinacion = COORDINACIONES_INICIALES.find((c) => c.id === nominacionActual?.coordinacion_id);
+
+  // Síntesis automática al seleccionar un colaborador con relato largo
+  useEffect(() => {
+    if (!nominacionActual || !nominacionActual.id) return;
+    const yaExiste = textosDiplomas[nominacionActual.id];
+    const relato = nominacionActual.descripcion_hecho || "";
+
+    // Si no tiene síntesis previa y el relato es largo (>240 caracteres), sintetizar automáticamente
+    if (!yaExiste && relato.length > 240 && !estaSintetizando) {
+      setEstaSintetizando(true);
+      sintetizarHechoDiploma(
+        colaborador?.nombre_completo || "Colaborador",
+        relato,
+        nominacionActual.pilares || []
+      ).then((sintesis) => {
+        if (sintesis) {
+          setTextosDiplomas((prev) => {
+            const nuevo = { ...prev, [nominacionActual.id]: sintesis };
+            if (typeof window !== "undefined") {
+              localStorage.setItem("mmc_diploma_sintesis_v1", JSON.stringify(nuevo));
+            }
+            return nuevo;
+          });
+        }
+      }).finally(() => {
+        setEstaSintetizando(false);
+      });
+    }
+  }, [nominacionActual, colaborador, textosDiplomas, estaSintetizando]);
+
+  const textoDiplomaActual = nominacionActual
+    ? textosDiplomas[nominacionActual.id] ?? nominacionActual.descripcion_hecho
+    : "";
+
+  const handleTextoChange = (nuevoTexto: string) => {
+    if (!nominacionActual) return;
+    setTextosDiplomas((prev) => {
+      const nuevo = { ...prev, [nominacionActual.id]: nuevoTexto };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("mmc_diploma_sintesis_v1", JSON.stringify(nuevo));
+      }
+      return nuevo;
+    });
+  };
+
+  const handleReSintetizar = async () => {
+    if (!nominacionActual || estaSintetizando) return;
+    setEstaSintetizando(true);
+    try {
+      const sintesis = await sintetizarHechoDiploma(
+        colaborador?.nombre_completo || "Colaborador",
+        nominacionActual.descripcion_hecho || "",
+        nominacionActual.pilares || []
+      );
+      if (sintesis) {
+        handleTextoChange(sintesis);
+      }
+    } finally {
+      setEstaSintetizando(false);
+    }
+  };
+
+  const handleRestaurarOriginal = () => {
+    if (!nominacionActual) return;
+    handleTextoChange(nominacionActual.descripcion_hecho || "");
+  };
 
   const handlePrint = () => {
     if (typeof window !== "undefined") window.print();
@@ -164,6 +245,74 @@ export default function CertificadoPage() {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Fila de Edición y Síntesis Automática IA */}
+          <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                  Cita de Mérito en Diploma
+                </span>
+                {estaSintetizando ? (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 animate-pulse border border-amber-200">
+                    <Sparkles className="h-3 w-3 animate-spin text-amber-600" />
+                    Sintetizando con Gemini IA...
+                  </span>
+                ) : textosDiplomas[nominacionActual?.id] &&
+                  textosDiplomas[nominacionActual?.id] !== nominacionActual?.descripcion_hecho ? (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 border border-emerald-200">
+                    <Sparkles className="h-3 w-3 text-emerald-600" />
+                    Síntesis IA Activa
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-200">
+                    Texto original
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-[11px] font-mono font-medium ${
+                    (textoDiplomaActual?.length || 0) > 270
+                      ? "text-rose-600 font-bold"
+                      : (textoDiplomaActual?.length || 0) >= 210
+                      ? "text-emerald-700"
+                      : "text-slate-500"
+                  }`}
+                >
+                  {textoDiplomaActual?.length || 0} / 260 carac.
+                </span>
+                <button
+                  type="button"
+                  onClick={handleReSintetizar}
+                  disabled={estaSintetizando}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                  title="Volver a generar la síntesis con la API de Gemini"
+                >
+                  <RefreshCw className={`h-3 w-3 ${estaSintetizando ? "animate-spin" : ""}`} />
+                  Regenerar IA
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRestaurarOriginal}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 underline transition-colors"
+                  title="Restaurar el texto original escrito por el nominador"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Original
+                </button>
+              </div>
+            </div>
+
+            <textarea
+              value={textoDiplomaActual}
+              onChange={(e) => handleTextoChange(e.target.value)}
+              rows={2}
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-serif italic text-slate-800 shadow-inner focus:border-[#254D6E] focus:outline-none focus:ring-2 focus:ring-[#254D6E]/15 resize-none leading-relaxed transition-all"
+              placeholder="Escribe o ajusta la dedicatoria que aparecerá en el diploma..."
+            />
           </div>
         </div>
       </div>
@@ -430,7 +579,8 @@ export default function CertificadoPage() {
                     }}
                   >
                     &ldquo;
-                    {nominacionActual?.descripcion_hecho ||
+                    {textoDiplomaActual ||
+                      nominacionActual?.descripcion_hecho ||
                       "Acción extraordinaria orientada a la excelencia en la experiencia del huésped."}
                     &rdquo;
                   </p>
