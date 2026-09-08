@@ -27,9 +27,9 @@ export const SINTESIS_PREDETERMINADAS: Record<string, string> = {
   "nom-1788558743454":
     "Por su extraordinario compromiso y resiliencia al liderar proyectos de alto impacto como Savora y Festividades, transformando con empatía cada reto en oportunidad y manteniendo una actitud positiva que inspira a todo el equipo.",
 
-  // Brian (c4-09)
+  // Brian Uscanga Sosa (c4-09)
   "nom-1788815367786":
-    "Por su valentía y proactividad para asumir nuevos retos y proponer rediseños de alto impacto, dando un paso al frente con creatividad y ganas genuinas de crecer para construir con dedicación su propio camino de excelencia.",
+    "Por su espíritu de iniciativa y valentía al asumir el liderazgo de Punta Cana, dando un paso al frente con creatividad y una genuina inquietud por crecer, proponer rediseños y dejar una huella de excelencia en el equipo.",
 
   // David (c5-13)
   "nom-1788382677766":
@@ -69,7 +69,7 @@ export async function sintetizarHechoDiploma(
   }
 
   // Si el texto ya es breve y cabe en el layout, no requiere síntesis
-  if (relatoOriginal.length <= 250) {
+  if (relatoOriginal.length <= 230) {
     return relatoOriginal.trim();
   }
 
@@ -87,7 +87,7 @@ REGLAS DE ORO:
 1. NUNCA inventes texto corporativo frío ni clichés vacíos ("por su ardua labor", "por su gran liderazgo", "por su compromiso").
 2. CONSERVA LA CALIDEZ, LAS PALABRAS ORIGINALES, EL ESPÍRITU Y LA ANÉCDOTA que escribió quien lo postuló.
 3. Debe leerse como una dedicatoria honorífica solemne pero profundamente humana.
-4. LONGITUD ESTRICTA: Entre 220 y 260 caracteres (incluyendo espacios).
+4. LONGITUD ESTRICTA: Entre 190 y 230 caracteres (incluyendo espacios). No excedas los 235 caracteres bajo ninguna circunstancia.
 
 Colaborador galardonado: ${nombreNominado}${pilaresTexto}
 Relato original del nominador:
@@ -111,31 +111,36 @@ Responde ÚNICAMENTE con la dedicatoria para el diploma, sin comillas, sin intro
 
     if (!res.ok) {
       console.warn("Fallo en Gemini API:", res.status, await res.text());
-      return recortarInteligente(relatoOriginal, 250);
+      return recortarInteligente(relatoOriginal, 235);
     }
 
     const data = (await res.json()) as any;
     const textoGenerado = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
     if (textoGenerado && textoGenerado.length > 50) {
-      return textoGenerado.replace(/^["“'«]+|["”'»]+$/g, "").trim();
+      const limpio = textoGenerado.replace(/^["“'«]+|["”'»]+$/g, "").trim();
+      return recortarInteligente(limpio, 235);
     }
   } catch (err) {
     console.error("Error al sintetizar diploma con Gemini:", err);
   }
 
-  return recortarInteligente(relatoOriginal, 250);
+  return recortarInteligente(relatoOriginal, 235);
 }
 
 /**
- * Fallback determinista en caso de desconexión o fallo de red
+ * Fallback determinista en caso de desconexión o longitud excesiva
  */
-function recortarInteligente(texto: string, maxChars = 250): string {
+function recortarInteligente(texto: string, maxChars = 235): string {
   if (texto.length <= maxChars) return texto;
   const recortado = texto.slice(0, maxChars);
-  const ultimoPunto = Math.max(recortado.lastIndexOf("."), recortado.lastIndexOf(","), recortado.lastIndexOf(" "));
+  const ultimoPunto = Math.max(recortado.lastIndexOf("."), recortado.lastIndexOf(";"), recortado.lastIndexOf(","));
   if (ultimoPunto > 160) {
-    return recortado.slice(0, ultimoPunto).trim() + "...";
+    return recortado.slice(0, ultimoPunto).trim() + ".";
   }
-  return recortado.trim() + "...";
+  const ultimoEspacio = recortado.lastIndexOf(" ");
+  if (ultimoEspacio > 160) {
+    return recortado.slice(0, ultimoEspacio).trim() + ".";
+  }
+  return recortado.trim();
 }

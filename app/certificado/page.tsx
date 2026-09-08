@@ -39,9 +39,11 @@ export default function CertificadoPage() {
     // Cargar textos sintetizados previamente guardados
     if (typeof window !== "undefined") {
       try {
-        const guardados = localStorage.getItem("mmc_diploma_sintesis_v1");
+        const guardados = localStorage.getItem("mmc_diploma_sintesis_v2");
         if (guardados) {
           setTextosDiplomas(JSON.parse(guardados));
+        } else {
+          localStorage.removeItem("mmc_diploma_sintesis_v1");
         }
       } catch {
         /* noop */
@@ -102,7 +104,7 @@ export default function CertificadoPage() {
           setTextosDiplomas((prev) => {
             const nuevo = { ...prev, [nominacionActual.id]: sintesis };
             if (typeof window !== "undefined") {
-              localStorage.setItem("mmc_diploma_sintesis_v1", JSON.stringify(nuevo));
+              localStorage.setItem("mmc_diploma_sintesis_v2", JSON.stringify(nuevo));
             }
             return nuevo;
           });
@@ -124,7 +126,7 @@ export default function CertificadoPage() {
     setTextosDiplomas((prev) => {
       const nuevo = { ...prev, [nominacionActual.id]: nuevoTexto };
       if (typeof window !== "undefined") {
-        localStorage.setItem("mmc_diploma_sintesis_v1", JSON.stringify(nuevo));
+        localStorage.setItem("mmc_diploma_sintesis_v2", JSON.stringify(nuevo));
       }
       return nuevo;
     });
@@ -286,14 +288,14 @@ export default function CertificadoPage() {
               <div className="flex items-center gap-3">
                 <span
                   className={`text-[11px] font-mono font-medium ${
-                    (textoDiplomaActual?.length || 0) > 270
+                    (textoDiplomaActual?.length || 0) > 235
                       ? "text-rose-600 font-bold"
-                      : (textoDiplomaActual?.length || 0) >= 210
+                      : (textoDiplomaActual?.length || 0) >= 190
                       ? "text-emerald-700"
                       : "text-slate-500"
                   }`}
                 >
-                  {textoDiplomaActual?.length || 0} / 260 carac.
+                  {textoDiplomaActual?.length || 0} / 230 carac.
                 </span>
                 <button
                   type="button"
@@ -578,10 +580,15 @@ export default function CertificadoPage() {
                   <p
                     className="font-serif"
                     style={{
-                      fontSize: "2.05cqw",
+                      fontSize:
+                        (textoDiplomaActual?.length || 0) > 240
+                          ? "1.74cqw"
+                          : (textoDiplomaActual?.length || 0) > 200
+                          ? "1.88cqw"
+                          : "2.05cqw",
                       fontStyle: "italic",
                       color: "#3D3527",
-                      lineHeight: 1.5,
+                      lineHeight: (textoDiplomaActual?.length || 0) > 240 ? 1.4 : 1.48,
                       marginTop: "1.1cqw",
                       display: "-webkit-box",
                       WebkitLineClamp: 3,
