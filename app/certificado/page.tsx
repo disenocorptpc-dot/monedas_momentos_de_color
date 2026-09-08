@@ -13,7 +13,7 @@ import { fetchNominaciones, getStoredNominaciones } from "@/lib/local-store";
 import { getPilarTheme } from "@/lib/utils";
 import { Award, Printer, ArrowLeft, ChevronDown, Sparkles, RefreshCw, RotateCcw } from "lucide-react";
 import { BRAND, MARCA } from "@/lib/brand";
-import { sintetizarHechoDiploma } from "@/lib/sintesis-diploma";
+import { sintetizarHechoDiploma, obtenerSintesisPredeterminada } from "@/lib/sintesis-diploma";
 /* eslint-disable @next/next/no-img-element */
 
 /* ────────────────────────────────────────────────────────────
@@ -80,14 +80,18 @@ export default function CertificadoPage() {
   const colaborador = COLABORADORES_INICIALES.find((c) => c.id === nominacionActual?.nominado_id);
   const coordinacion = COORDINACIONES_INICIALES.find((c) => c.id === nominacionActual?.coordinacion_id);
 
+  const predeterminada = nominacionActual
+    ? obtenerSintesisPredeterminada(nominacionActual.id, nominacionActual.nominado_id)
+    : null;
+
   // Síntesis automática al seleccionar un colaborador con relato largo
   useEffect(() => {
     if (!nominacionActual || !nominacionActual.id) return;
     const yaExiste = textosDiplomas[nominacionActual.id];
     const relato = nominacionActual.descripcion_hecho || "";
 
-    // Si no tiene síntesis previa y el relato es largo (>240 caracteres), sintetizar automáticamente
-    if (!yaExiste && relato.length > 240 && !estaSintetizando) {
+    // Si no tiene síntesis previa ni predeterminada y el relato es largo (>240 caracteres), sintetizar automáticamente
+    if (!yaExiste && !predeterminada && relato.length > 240 && !estaSintetizando) {
       setEstaSintetizando(true);
       sintetizarHechoDiploma(
         colaborador?.nombre_completo || "Colaborador",
@@ -107,10 +111,12 @@ export default function CertificadoPage() {
         setEstaSintetizando(false);
       });
     }
-  }, [nominacionActual, colaborador, textosDiplomas, estaSintetizando]);
+  }, [nominacionActual, colaborador, textosDiplomas, estaSintetizando, predeterminada]);
 
   const textoDiplomaActual = nominacionActual
-    ? textosDiplomas[nominacionActual.id] ?? nominacionActual.descripcion_hecho
+    ? textosDiplomas[nominacionActual.id] ??
+      predeterminada ??
+      nominacionActual.descripcion_hecho
     : "";
 
   const handleTextoChange = (nuevoTexto: string) => {
@@ -259,11 +265,16 @@ export default function CertificadoPage() {
                     <Sparkles className="h-3 w-3 animate-spin text-amber-600" />
                     Sintetizando con Gemini IA...
                   </span>
-                ) : textosDiplomas[nominacionActual?.id] &&
-                  textosDiplomas[nominacionActual?.id] !== nominacionActual?.descripcion_hecho ? (
+                ) : (textosDiplomas[nominacionActual?.id] &&
+                  textosDiplomas[nominacionActual?.id] !== predeterminada &&
+                  textosDiplomas[nominacionActual?.id] !== nominacionActual?.descripcion_hecho) ? (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700 border border-sky-200">
+                    ✏️ Editado manualmente
+                  </span>
+                ) : (predeterminada || (textosDiplomas[nominacionActual?.id] && textosDiplomas[nominacionActual?.id] !== nominacionActual?.descripcion_hecho)) ? (
                   <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 border border-emerald-200">
                     <Sparkles className="h-3 w-3 text-emerald-600" />
-                    Síntesis IA Activa
+                    Síntesis Oficial Automática
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-200">
