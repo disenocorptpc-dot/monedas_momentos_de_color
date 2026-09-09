@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { PlusCircle, Vote, User, LogOut, Award } from "lucide-react";
+import { PlusCircle, Vote, User, LogOut, Award, BarChart3 } from "lucide-react";
 import { CONVOCATORIA_ACTUAL } from "@/lib/supabase";
 import { getUsuario, clearUsuario, type Usuario } from "@/lib/session";
 import { getStoredNominaciones } from "@/lib/local-store";
@@ -89,6 +89,18 @@ export function Navbar() {
               </Link>
 
               <Link
+                href="/resultados"
+                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                  pathname === "/resultados"
+                    ? "bg-[#254D6E]/15 text-[#254D6E] border border-[#254D6E]/30 font-semibold"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
+                }`}
+              >
+                <BarChart3 className="h-3.5 w-3.5 text-[#254D6E]" />
+                Resultados
+              </Link>
+
+              <Link
                 href="/certificado"
                 className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                   pathname === "/certificado"
@@ -161,6 +173,17 @@ export function Navbar() {
           >
             <Vote className="h-3.5 w-3.5" />
             Votar
+          </Link>
+          <Link
+            href="/resultados"
+            className={`flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap ${
+              pathname === "/resultados"
+                ? "bg-[#254D6E]/15 text-[#254D6E] border border-[#254D6E]/30 font-semibold"
+                : "text-slate-500 border border-slate-200"
+            }`}
+          >
+            <BarChart3 className="h-3.5 w-3.5 text-[#254D6E]" />
+            Resultados
           </Link>
           <Link
             href="/certificado"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Vote, PlusCircle, Sparkles, User } from "lucide-react";
+import { ChevronRight, Vote, PlusCircle, Sparkles, User, BarChart3, Award } from "lucide-react";
 import {
   MESA_ALTA_INICIALES,
   EVALUADORES_INICIALES,
@@ -153,6 +153,38 @@ export default function HomePage() {
                 </div>
               </div>
               <ChevronRight className={`h-4 w-4 transition-colors ${hayNominados ? "text-slate-400 group-hover:text-[#2A7D6F]" : "text-slate-300"}`} />
+            </button>
+
+            <button
+              onClick={() => router.push("/resultados")}
+              className="flex w-full items-center justify-between rounded-xl border border-[#254D6E]/30 bg-[#254D6E]/5 px-5 py-4 text-left transition-all hover:border-[#254D6E]/60 hover:bg-[#254D6E]/10 group"
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#254D6E]/15 text-[#254D6E]">
+                  <BarChart3 className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Resultados y Escrutinio</p>
+                  <p className="text-xs text-slate-500">Puntajes Borda, quorum y posiciones en vivo</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#254D6E] transition-colors" />
+            </button>
+
+            <button
+              onClick={() => router.push("/certificado")}
+              className="flex w-full items-center justify-between rounded-xl border border-[#B88F69]/30 bg-white px-5 py-4 text-left transition-all hover:border-[#B88F69]/60 hover:bg-[#B88F69]/5 group"
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#B88F69]/15 text-amber-700">
+                  <Award className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Diplomas Conmemorativos</p>
+                  <p className="text-xs text-slate-500">Generación e impresión de reconocimientos oficiales</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#B88F69] transition-colors" />
             </button>
           </div>
 
