@@ -39,8 +39,61 @@ const fontSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Monedas · Momentos de Color — The Palace Company",
-  description: "Programa de Reconocimiento al Talento Humano · Dirección de Diseño y Experiencia",
+  metadataBase: new URL("https://monedas-momentos-de-color.pages.dev"),
+  title: {
+    default: "Monedas · Momentos de Color — The Palace Company",
+    template: "%s | Monedas · Momentos de Color",
+  },
+  description:
+    "Programa de Reconocimiento al Talento Humano · Dirección de Diseño y Experiencia. Sistema oficial de votación, resultados y diplomas conmemorativos.",
+  applicationName: "Monedas Momentos de Color",
+  authors: [{ name: "The Palace Company" }],
+  creator: "The Palace Company · Dirección de Diseño y Experiencia",
+  publisher: "The Palace Company",
+  keywords: [
+    "The Palace Company",
+    "Momentos de Color",
+    "Monedas",
+    "Reconocimiento",
+    "Talento Humano",
+    "Premios Borda",
+    "Diplomas",
+  ],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  manifest: "/site.webmanifest",
+  openGraph: {
+    type: "website",
+    locale: "es_MX",
+    url: "https://monedas-momentos-de-color.pages.dev",
+    siteName: "Monedas · Momentos de Color",
+    title: "Monedas · Momentos de Color — The Palace Company",
+    description:
+      "Programa de Reconocimiento al Talento Humano · Dirección de Diseño y Experiencia. Votaciones, escrutinio y diplomas oficiales de excelencia.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Monedas · Momentos de Color — The Palace Company",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Monedas · Momentos de Color — The Palace Company",
+    description:
+      "Programa de Reconocimiento al Talento Humano · Dirección de Diseño y Experiencia. Sistema oficial de reconocimiento y diplomas condecorativos.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

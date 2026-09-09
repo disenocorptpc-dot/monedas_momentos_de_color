@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E2338"/>
+      <stop offset="50%" stop-color="#1B365D"/>
+      <stop offset="100%" stop-color="#254D6E"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D4AF37"/>
+      <stop offset="50%" stop-color="#B88F69"/>
+      <stop offset="100%" stop-color="#8C6642"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Base circular océano -->
+  <circle cx="256" cy="256" r="246" fill="url(#oceanGrad)"/>
+  
+  <!-- Anillo exterior dorado/bronce con sombra -->
+  <circle cx="256" cy="256" r="236" fill="none" stroke="url(#goldGrad)" stroke-width="8" filter="url(#glow)"/>
+  <circle cx="256" cy="256" r="222" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-opacity="0.6"/>
+
+  <!-- Monograma estilizado The Palace Company (TPC) -->
+  <g id="monogram" transform="matrix(0.92 0 0 0.92 256 252)" text-anchor="middle">
+    <!-- Diamantes decorativos institucionales -->
+    <rect x="-6" y="-176" width="12" height="12" fill="#D4AF37" transform="rotate(45 0 -170)"/>
+    <rect x="-6" y="158" width="12" height="12" fill="#D4AF37" transform="rotate(45 0 164)"/>
+
+    <!-- TPC Letras ceremoniales entrelazadas -->
+    <text x="0" y="58" 
+          font-family="'Freight Text', 'Georgia', 'Times New Roman', serif" 
+          font-size="190" 
+          font-weight="bold" 
+          letter-spacing="-6"
+          fill="#FAF6F0" 
+          filter="url(#glow)">TPC</text>
+    
+    <!-- Texto inferior de corona ceremonial -->
+    <text x="0" y="118" 
+          font-family="'Freight Sans Pro', 'Helvetica Neue', 'Arial', sans-serif" 
+          font-size="28" 
+          font-weight="600" 
+          letter-spacing="10" 
+          fill="#D4AF37">EST. 1984</text>
+  </g>
+</svg>
