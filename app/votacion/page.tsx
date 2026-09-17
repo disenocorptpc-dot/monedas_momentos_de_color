@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   COORDINACIONES_INICIALES,
   COLABORADORES_INICIALES,
@@ -40,9 +41,13 @@ import {
   Star,
   User,
   Info,
+  ArrowRight,
+  Home,
+  X,
 } from "lucide-react";
 
 export default function VotacionPage() {
+  const router = useRouter();
   const [comite, setComite] = useState<ComiteIntegrante[]>([]);
   const [inhabilitaciones, setInhabilitaciones] = useState<ComiteInhabilitacion[]>([]);
   const [nominaciones, setNominaciones] = useState<Nominacion[]>([]);
@@ -54,10 +59,18 @@ export default function VotacionPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [exitoMsg, setExitoMsg] = useState("");
   const [guardandoVotos, setGuardandoVotos] = useState(false);
+  const [mostrarModalExito, setMostrarModalExito] = useState(false);
 
   // Detección: ¿el usuario logueado es un miembro del comité que está nominado?
   const [usuarioNominado, setUsuarioNominado] = useState<Nominacion | null>(null);
   const [nombreUsuario, setNombreUsuario] = useState("");
+
+  const yaVoto = Boolean(
+    votanteActualId &&
+    votosRegistrados.some(
+      (v) => v.integrante_id === votanteActualId && v.convocatoria_id === CONVOCATORIA_ACTUAL.id
+    )
+  );
 
   useEffect(() => {
     // 1. Carga rápida desde caché local
@@ -227,6 +240,10 @@ export default function VotacionPage() {
       const updated = saveStoredVotos(nuevosVotos);
       setVotosRegistrados(updated);
       setExitoMsg("¡Votos registrados exitosamente con método Borda (4-3-2-1) en el sistema central!");
+      setMostrarModalExito(true);
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } catch {
       setErrorMsg("Ocurrió un problema al enviar los votos a la nube. Intenta de nuevo.");
     } finally {
@@ -468,6 +485,24 @@ export default function VotacionPage() {
         </div>
       )}
 
+      {yaVoto && !exitoMsg && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-emerald-300 bg-emerald-50/80 p-4 shadow-xs">
+          <div className="flex items-center gap-2.5 text-xs text-emerald-900">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+            <div>
+              <p className="font-bold">Boleta oficial registrada para este ciclo</p>
+              <p className="text-[11px] text-emerald-700">Tus 10 puntos están computados en el escrutinio general. Puedes modificar tu selección y volver a enviar si deseas actualizarla.</p>
+            </div>
+          </div>
+          <Link
+            href="/resultados"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-emerald-800 transition-colors shrink-0"
+          >
+            Ver Resultados en Vivo →
+          </Link>
+        </div>
+      )}
+
       {/* Cards de Nominaciones a Votar */}
       <form onSubmit={handleSubmitVotos} className="space-y-6">
         <div className="grid grid-cols-1 gap-4">
@@ -634,15 +669,111 @@ export default function VotacionPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Registrando votos en la nube...
               </>
+            ) : yaVoto ? (
+              <>
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                Actualizar Boleta de Votación Oficial
+              </>
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                Guardar Boleta de Votación (Borda 4-3-2-1)
+                Guardar y Enviar Boleta Oficial (Borda 4-3-2-1)
               </>
             )}
           </button>
         </div>
       </form>
+
+      {/* ══════════════════════════════════════════════════════════════
+          MODAL CEREMONIAL DE CONFIRMACIÓN DE VOTO
+          ══════════════════════════════════════════════════════════════ */}
+      {mostrarModalExito && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-2xl border-2 border-[#B88F69]/40 bg-white p-6 sm:p-8 shadow-2xl text-center space-y-5">
+            {/* Botón cerrar X discreto */}
+            <button
+              onClick={() => setMostrarModalExito(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 rounded-full p-1 transition-colors"
+              title="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Medallón de éxito */}
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-inner">
+              <CheckCircle2 className="h-9 w-9 text-emerald-600" />
+            </div>
+
+            <div className="space-y-1">
+              <span className="inline-block rounded-full bg-[#B88F69]/15 px-3 py-1 text-[11px] font-bold text-[#8a6a4c] uppercase tracking-wider">
+                Deliberación Colegiada
+              </span>
+              <h3 className="text-2xl font-bold text-slate-900">
+                ¡Boleta Oficial Registrada con Éxito!
+              </h3>
+              <p className="text-xs text-slate-500">
+                Tus 10 puntos han sido resguardados en la base de datos central y computados en el escrutinio en tiempo real.
+              </p>
+            </div>
+
+            {/* Desglose de puntos de la boleta */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left space-y-2">
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Resumen de tu selección Borda:
+              </p>
+              {[4, 3, 2, 1].map((pts) => {
+                const nomId = Object.entries(puntosAsignados).find(([_, p]) => p === pts)?.[0];
+                const nom = nominaciones.find((n) => n.id === nomId);
+                const colab = COLABORADORES_INICIALES.find((c) => c.id === nom?.nominado_id);
+                const coord = COORDINACIONES_INICIALES.find((c) => c.id === nom?.coordinacion_id);
+
+                const badgeColor =
+                  pts === 4
+                    ? "bg-[#B88F69] text-white"
+                    : pts === 3
+                    ? "bg-[#254D6E] text-white"
+                    : pts === 2
+                    ? "bg-[#4A8BB5] text-white"
+                    : "bg-[#2A7D6F] text-white";
+
+                return (
+                  <div key={pts} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-200/60 last:border-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${badgeColor}`}>
+                        {pts === 4 ? "🥇 4 Pts" : pts === 3 ? "🥈 3 Pts" : pts === 2 ? "🥉 2 Pts" : "🎖️ 1 Pt"}
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {colab?.nombre_completo || "Nominado"}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-400">
+                      {coord?.nombre || ""}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Botones de acción */}
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <button
+                onClick={() => router.push("/resultados")}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#254D6E] px-4 py-3 text-xs font-semibold text-white shadow-sm hover:bg-[#1c3d59] transition-colors"
+              >
+                Ver Resultados y Escrutinio
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => router.push("/")}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <Home className="h-4 w-4 text-slate-400" />
+                Ir al Inicio
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
