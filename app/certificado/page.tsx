@@ -309,16 +309,16 @@ function DiplomaView({
                 style={{
                   fontSize:
                     (texto?.length || 0) > 240
-                      ? "1.74cqw"
+                      ? "1.58cqw"
                       : (texto?.length || 0) > 200
-                      ? "1.88cqw"
-                      : "2.05cqw",
+                      ? "1.72cqw"
+                      : "1.92cqw",
                   fontStyle: "italic",
                   color: "#3D3527",
-                  lineHeight: (texto?.length || 0) > 240 ? 1.4 : 1.48,
+                  lineHeight: (texto?.length || 0) > 240 ? 1.34 : (texto?.length || 0) > 200 ? 1.38 : 1.45,
                   marginTop: "1.1cqw",
                   display: "-webkit-box",
-                  WebkitLineClamp: 3,
+                  WebkitLineClamp: (texto?.length || 0) > 200 ? 4 : 3,
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden",
                 }}

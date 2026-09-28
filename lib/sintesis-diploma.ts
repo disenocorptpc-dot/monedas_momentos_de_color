@@ -17,11 +17,11 @@ const GEMINI_KEY_DEFAULT =
 export const SINTESIS_PREDETERMINADAS: Record<string, string> = {
   // Montserrat Madera Castillo (c3-02)
   "nom-1788619265673":
-    "Ante una alta carga en el equipo, Mon asumió voluntariamente el diseño de múltiples manuales con enorme rapidez y precisión, manteniendo siempre una actitud súper positiva ante cada cambio y una disposición genuina de sumar que hizo una diferencia invaluable.",
+    "Ante una alta carga en el equipo, Mon asumió con rapidez y precisión el diseño de múltiples manuales, manteniendo siempre una actitud súper positiva y una disposición genuina de sumar que hizo una diferencia invaluable.",
 
   // María Fernanda Aguilar / Fergie (c6-03)
   "nom-1788389290790":
-    "Por ser una presencia noble y genuina que comparte palabras de aliento que apapachan el corazón, ofreciendo siempre su apoyo incondicional y detalles de calidez humana que colorean profundamente el día y tocan el alma de quienes la rodean.",
+    "Por ser una presencia noble y genuina que comparte palabras de aliento que apapachan el corazón, ofreciendo su apoyo incondicional y hermosos detalles que colorean el día y tocan el alma de quienes la rodean.",
 
   // Sergio Medina (c4-04)
   "nom-1788558743454":
