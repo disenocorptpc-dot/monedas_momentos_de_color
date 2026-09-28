@@ -189,7 +189,7 @@ export const COLABORADORES_INICIALES: Colaborador[] = [
   // ── Proyectos Especiales (c6) ──
   { id: "c6-01", nombre_completo: "Luis Alberto Marquez Canales",    coordinacion_id: "c6", activo: true },
   { id: "c6-02", nombre_completo: "Sergio Francisco Cárdenas Valdez", coordinacion_id: "c6", activo: true },
-  { id: "c6-03", nombre_completo: "María Fernanda Aguilar Rodráguez", coordinacion_id: "c6", activo: true },
+  { id: "c6-03", nombre_completo: "María Fernanda Aguilar Rodríguez", coordinacion_id: "c6", activo: true },
   { id: "c6-04", nombre_completo: "José Geovani Dzib Uitzil",        coordinacion_id: "c6", activo: true },
   { id: "c6-05", nombre_completo: "Daniel Vera Rodríguez",           coordinacion_id: "c6", activo: true },
   { id: "c6-06", nombre_completo: "Nancy Gabriela Lopez Jimenez",    coordinacion_id: "c6", activo: true },
