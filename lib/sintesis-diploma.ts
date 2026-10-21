@@ -53,7 +53,7 @@ export function obtenerSintesisPredeterminada(nomId?: string, nominadoId?: strin
   if (nomId && SINTESIS_PREDETERMINADAS[nomId]) {
     return SINTESIS_PREDETERMINADAS[nomId];
   }
-  if (nominadoId && SINTESIS_POR_NOMINADO[nominadoId]) {
+  if (!nomId && nominadoId && SINTESIS_POR_NOMINADO[nominadoId]) {
     return SINTESIS_POR_NOMINADO[nominadoId];
   }
   return null;

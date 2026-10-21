@@ -143,9 +143,10 @@ export const COLABORADORES_INICIALES: Colaborador[] = [
   { id: "c1-02", nombre_completo: "Rafael López",      coordinacion_id: "c1", activo: true },
 
   // ── Diseño Industrial y 3D (c2) ──
-  { id: "c2-01", nombre_completo: "Homero Hernández",       coordinacion_id: "c2", activo: true },
-  { id: "c2-02", nombre_completo: "Maria Esther Mendoza",   coordinacion_id: "c2", activo: true },
-  { id: "c2-03", nombre_completo: "Mitchelle Pous Alarcón", coordinacion_id: "c2", activo: true },
+  { id: "c2-01", nombre_completo: "Homero Hernández",                coordinacion_id: "c2", activo: true },
+  { id: "c2-02", nombre_completo: "Maria Esther Mendoza",            coordinacion_id: "c2", activo: true },
+  { id: "c2-03", nombre_completo: "Mitchelle Pous Alarcón",          coordinacion_id: "c2", activo: true },
+  { id: "c2-04", nombre_completo: "Sergio Francisco Cárdenas Valdez", coordinacion_id: "c2", activo: true },
 
   // ── Alimentos y Bebidas (c3) ──
   { id: "c3-01", nombre_completo: "Tanya Montserrat Castro Ronquillo",       coordinacion_id: "c3", activo: true },
@@ -188,7 +189,6 @@ export const COLABORADORES_INICIALES: Colaborador[] = [
 
   // ── Proyectos Especiales (c6) ──
   { id: "c6-01", nombre_completo: "Luis Alberto Marquez Canales",    coordinacion_id: "c6", activo: true },
-  { id: "c6-02", nombre_completo: "Sergio Francisco Cárdenas Valdez", coordinacion_id: "c6", activo: true },
   { id: "c6-03", nombre_completo: "María Fernanda Aguilar Rodríguez", coordinacion_id: "c6", activo: true },
   { id: "c6-04", nombre_completo: "José Geovani Dzib Uitzil",        coordinacion_id: "c6", activo: true },
   { id: "c6-05", nombre_completo: "Daniel Vera Rodríguez",           coordinacion_id: "c6", activo: true },
@@ -257,6 +257,7 @@ export function findColaborador(id?: string | null): Colaborador | undefined {
     "ev-4": "c6-03",
     "ev-5": "c3-06",
     "ev-6": "c4-05",
+    "c6-02": "c2-04",
   };
   const resolvedId = evMap[id] || id;
   return (
