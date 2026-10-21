@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { STORAGE_KEYS } from "@/lib/local-store";
-import { Nominacion } from "@/lib/supabase";
+import { CONVOCATORIA_ACTUAL, Nominacion } from "@/lib/supabase";
 import { Sparkles, X } from "lucide-react";
 
 export function AutoSyncRescue() {
@@ -14,7 +14,7 @@ export function AutoSyncRescue() {
       if (typeof window === "undefined") return;
 
       try {
-        // 1. Obtener nominaciones locales
+        // 1. Obtener nominaciones locales del ciclo actual
         const rawNom = localStorage.getItem(STORAGE_KEYS.NOMINACIONES);
         if (!rawNom) return;
 
@@ -29,8 +29,8 @@ export function AutoSyncRescue() {
           return;
         }
 
-        // 2. Consultar qué nominaciones ya existen en el servidor
-        const res = await fetch("/api/nominaciones", { cache: "no-store" });
+        // 2. Consultar qué nominaciones ya existen en el servidor para el ciclo actual
+        const res = await fetch(`/api/nominaciones?convocatoria_id=${CONVOCATORIA_ACTUAL.id}`, { cache: "no-store" });
         if (!res.ok) return;
 
         const serverNominaciones: Nominacion[] = await res.json();
@@ -38,9 +38,9 @@ export function AutoSyncRescue() {
           (serverNominaciones || []).map((n) => n.id)
         );
 
-        // 3. Filtrar las que faltan en el servidor
+        // 3. Filtrar las que faltan en el servidor y pertenecen al ciclo actual
         const pendientes = nominacionesLocales.filter(
-          (n) => n && n.id && !serverIds.has(n.id)
+          (n) => n && n.id && n.convocatoria_id === CONVOCATORIA_ACTUAL.id && !serverIds.has(n.id)
         );
 
         if (pendientes.length === 0) return;

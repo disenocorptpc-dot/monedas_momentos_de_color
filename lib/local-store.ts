@@ -16,11 +16,11 @@ export type { Nominacion, ComiteVoto, ComiteIntegrante, ComiteInhabilitacion, Co
 const CONV_ID = CONVOCATORIA_ACTUAL.id;
 
 export const STORAGE_KEYS = {
-  NOMINACIONES: "mmc_nominaciones_v2",
+  NOMINACIONES: `mmc_nominaciones_${CONV_ID}`,
   COMITE: "mmc_comite_v2",
-  INHABILITACIONES: "mmc_inhabilitaciones_v1",
-  VOTOS: "mmc_votos_v1",
-  CONVOCATORIA: "mmc_convocatoria_v1",
+  INHABILITACIONES: `mmc_inhabilitaciones_${CONV_ID}`,
+  VOTOS: `mmc_votos_${CONV_ID}`,
+  CONVOCATORIA: `mmc_convocatoria_${CONV_ID}`,
 };
 
 // En desarrollo local, apuntar a producción para tener datos reales de D1

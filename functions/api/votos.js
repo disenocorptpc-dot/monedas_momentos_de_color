@@ -7,7 +7,7 @@ export async function onRequestGet({ request, env }) {
       });
     }
 
-    const convId = new URL(request.url).searchParams.get("convocatoria_id") || "conv-2026-09";
+    const convId = new URL(request.url).searchParams.get("convocatoria_id") || "conv-2026-10";
     const { results } = await env.DB.prepare(
       "SELECT * FROM comite_votos WHERE convocatoria_id = ?"
     ).bind(convId).all();
@@ -56,7 +56,7 @@ export async function onRequestPost({ request, env }) {
 
     const body = await request.json();
     const votos = body.votos || [];
-    const convId = body.convocatoria_id || "conv-2026-09";
+    const convId = body.convocatoria_id || "conv-2026-10";
 
     if (votos.length > 0) {
       await env.DB.prepare(

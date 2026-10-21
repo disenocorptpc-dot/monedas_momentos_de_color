@@ -267,12 +267,12 @@ export function findColaborador(id?: string | null): Colaborador | undefined {
 }
 
 export const CONVOCATORIA_ACTUAL: Convocatoria = {
-  id: "conv-2026-09",
-  ciclo: "Septiembre 2026",
+  id: "conv-2026-10",
+  ciclo: "Octubre 2026",
   estado: "nominaciones",
-  fecha_inicio: "2026-09-01",
-  fecha_cierre_nom: "2026-09-20",
-  fecha_cierre_vot: "2026-09-27",
+  fecha_inicio: "2026-10-01",
+  fecha_cierre_nom: "2026-10-25",
+  fecha_cierre_vot: "2026-10-29",
   quorum_minimo: 4,
 };
 

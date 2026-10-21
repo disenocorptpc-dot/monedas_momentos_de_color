@@ -7,7 +7,7 @@ export async function onRequestGet({ request, env }) {
       });
     }
 
-    const convId = new URL(request.url).searchParams.get("convocatoria_id") || "conv-2026-09";
+    const convId = new URL(request.url).searchParams.get("convocatoria_id") || "conv-2026-10";
     const { results } = await env.DB.prepare(
       "SELECT * FROM nominaciones WHERE convocatoria_id = ? ORDER BY created_at DESC"
     ).bind(convId).all();
