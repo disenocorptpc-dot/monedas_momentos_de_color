@@ -272,8 +272,8 @@ export const CONVOCATORIA_ACTUAL: Convocatoria = {
   ciclo: "Octubre 2026",
   estado: "nominaciones",
   fecha_inicio: "2026-10-01",
-  fecha_cierre_nom: "2026-10-25",
-  fecha_cierre_vot: "2026-10-29",
+  fecha_cierre_nom: "2026-10-26",
+  fecha_cierre_vot: "2026-10-31",
   quorum_minimo: 4,
 };
 
